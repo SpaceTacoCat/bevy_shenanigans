@@ -19,14 +19,14 @@ struct VertexOutput {
 fn vertex(vertex: Vertex) -> VertexOutput {
     var out: VertexOutput;
 
-    out.position = view.projection * r_mesh.model * vec4<f32>(vertex.position, 1.0);
+    out.position = view.view_proj * r_mesh.model * vec4<f32>(vertex.position, 1.0);
 
     return out;
 }
 
 [[stage(fragment)]]
-fn fragment(vertex_output: VertexOutput) -> [[location(0)]] vec4<f32> {
-    var color = vec4<f32>(0.0, 0.0, 1.0, 1.0);
+fn fragment() -> [[location(0)]] vec4<f32> {
+    var color = vec4<f32>(1.0, 1.0, 1.0, 1.0);
 
     return color;
 }

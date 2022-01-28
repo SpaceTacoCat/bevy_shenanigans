@@ -1,4 +1,4 @@
-use crate::skybox::{setup_quad, SkyMaterial};
+use crate::skybox::{Skybox, SkyboxPlugin};
 use bevy::core::FixedTimestep;
 use bevy::prelude::*;
 
@@ -20,9 +20,8 @@ fn main() {
             brightness: 0.5,
         })
         .add_plugins(DefaultPlugins)
-        .add_plugin(MaterialPlugin::<SkyMaterial>::default())
+        .add_plugin(SkyboxPlugin)
         .add_startup_system(setup)
-        .add_startup_system(setup_quad)
         .add_stage_after(
             CoreStage::Update,
             FixedUpdateStage,
@@ -39,6 +38,7 @@ fn setup(
     mut commands: Commands,
     mut scene_spawner: ResMut<SceneSpawner>,
     asset_server: Res<AssetServer>,
+    mut meshes: ResMut<Assets<Mesh>>,
 ) {
     let player_ship_entity = commands
         .spawn()
@@ -46,10 +46,26 @@ fn setup(
         .insert(GlobalTransform::default())
         .insert(PlayerShip)
         .id();
-    // scene_spawner.spawn_as_child(
-    //     asset_server.load("models/spaceship.gltf#Scene0"),
-    //     player_ship_entity,
-    // );
+    scene_spawner.spawn_as_child(
+        asset_server.load("models/spaceship.gltf#Scene0"),
+        player_ship_entity,
+    );
+
+    commands.spawn_bundle((
+        meshes.add(Mesh::from(shape::Cube { size: 1.0 })),
+        Skybox,
+        Transform::from_xyz(0.0, 0.0, 0.0),
+        GlobalTransform::default(),
+        Visibility::default(),
+        ComputedVisibility::default(),
+    ));
+
+    commands.spawn_bundle(PbrBundle {
+        mesh: meshes.add(Mesh::from(shape::Cube { size: 1.0 })),
+        transform: Transform::from_xyz(5.0, 0.0, 5.0),
+        ..Default::default()
+    });
+
     commands
         .spawn_bundle(PerspectiveCameraBundle {
             transform: Transform::from_xyz(0.0, 20.0, -35.0)
@@ -59,7 +75,10 @@ fn setup(
         .insert(MainCamera);
 }
 
-fn camera_rotate_around_center_point(time: Res<Time>, mut q_camera: Query<&mut Transform, With<MainCamera>>) {
+fn camera_rotate_around_center_point(
+    time: Res<Time>,
+    mut q_camera: Query<&mut Transform, With<MainCamera>>,
+) {
     let mut camera = q_camera.single_mut();
     let time = time.time_since_startup().as_secs_f32();
     camera.translation = Vec3::new(35.0 * time.cos(), 20.0, 35.0 * time.sin());
