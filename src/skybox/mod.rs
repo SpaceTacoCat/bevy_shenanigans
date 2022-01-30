@@ -11,14 +11,13 @@ use bevy::reflect::TypeUuid;
 use bevy::render::render_asset::{PrepareAssetError, RenderAsset, RenderAssets};
 use bevy::render::render_component::{ExtractComponent, ExtractComponentPlugin};
 use bevy::render::render_phase::{AddRenderCommand, DrawFunctions, RenderPhase, SetItemPipeline};
-use bevy::render::render_resource::{
-    BindGroup, BindGroupDescriptor, BindGroupEntry, BindGroupLayout, BindGroupLayoutDescriptor,
-    BufferInitDescriptor, BufferUsages, RenderPipelineCache, RenderPipelineDescriptor,
-    SpecializedPipeline, SpecializedPipelines,
-};
+use bevy::render::render_resource::{BindGroup, BindGroupDescriptor, BindGroupEntry, BindGroupLayout, BindGroupLayoutDescriptor, BufferInitDescriptor, BufferUsages, CompareFunction, RenderPipelineCache, RenderPipelineDescriptor, SpecializedPipeline, SpecializedPipelines, StencilState};
 use bevy::render::renderer::RenderDevice;
 use bevy::render::view::ExtractedView;
 use bevy::render::{RenderApp, RenderStage};
+use crate::skybox::mesh::SkyboxMesh;
+
+pub mod mesh;
 
 type DrawSkybox = (
     SetItemPipeline,
@@ -74,6 +73,7 @@ impl SpecializedPipeline for SkyPipeline {
 
     fn specialize(&self, key: Self::Key) -> RenderPipelineDescriptor {
         let mut descriptor = self.mesh_pipeline.specialize(key);
+
         descriptor.vertex.shader = self.shader.clone();
         let fragment = descriptor.fragment.as_mut().unwrap();
         fragment.shader = self.shader.clone();
@@ -81,6 +81,8 @@ impl SpecializedPipeline for SkyPipeline {
             self.mesh_pipeline.view_layout.clone(),
             self.mesh_pipeline.mesh_layout.clone(),
         ]);
+        let mut depth_stencil = descriptor.depth_stencil.as_mut().unwrap();
+        depth_stencil.depth_compare = CompareFunction::LessEqual;
         descriptor
     }
 }

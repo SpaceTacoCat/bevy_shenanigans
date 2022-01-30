@@ -1,6 +1,7 @@
 use crate::skybox::{Skybox, SkyboxPlugin};
 use bevy::core::FixedTimestep;
 use bevy::prelude::*;
+use crate::skybox::mesh::SkyboxMesh;
 
 mod skybox;
 
@@ -51,6 +52,7 @@ fn setup(
         player_ship_entity,
     );
 
+    // TODO: Move to plugin code
     commands.spawn_bundle((
         meshes.add(Mesh::from(shape::Cube { size: 1.0 })),
         Skybox,

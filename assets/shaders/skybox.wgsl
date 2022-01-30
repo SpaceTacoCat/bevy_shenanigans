@@ -12,14 +12,18 @@ struct Vertex {
 
 struct VertexOutput {
     [[builtin(position)]] position: vec4<f32>;
-    [[location(0)]] uv: vec2<f32>;
+    [[location(0)]] uv: vec3<f32>;
 };
 
 [[stage(vertex)]]
 fn vertex(vertex: Vertex) -> VertexOutput {
+    var view_proj = view.view_proj;
+    view_proj.w = vec4<f32>(0.0, 0.0, 0.0, 1.0);
+
     var out: VertexOutput;
 
-    out.position = view.view_proj * r_mesh.model * vec4<f32>(vertex.position, 1.0);
+    out.position = (view.view_proj * vec4<f32>(vertex.position, 1.0)).xyww;
+    out.uv = vec3<f32>(vertex.position.xy, -vertex.position.z);
 
     return out;
 }
