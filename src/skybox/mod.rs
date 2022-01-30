@@ -82,7 +82,7 @@ impl SpecializedPipeline for SkyPipeline {
             self.mesh_pipeline.mesh_layout.clone(),
         ]);
         let mut depth_stencil = descriptor.depth_stencil.as_mut().unwrap();
-        depth_stencil.depth_compare = CompareFunction::LessEqual;
+        depth_stencil.depth_compare = CompareFunction::Less;
         descriptor
     }
 }
