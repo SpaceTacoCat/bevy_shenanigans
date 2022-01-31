@@ -11,12 +11,7 @@ use bevy::render::render_phase::{
     SetItemPipeline, TrackedRenderPass,
 };
 use bevy::render::render_resource::std140::AsStd140;
-use bevy::render::render_resource::{
-    BindGroup, BindGroupDescriptor, BindGroupEntry, BindGroupLayout, BindGroupLayoutDescriptor,
-    BindGroupLayoutEntry, BindingType, BufferBindingType, BufferSize, DynamicUniformVec,
-    PrimitiveTopology, RenderPipelineCache, RenderPipelineDescriptor, ShaderStages,
-    SpecializedPipeline, SpecializedPipelines,
-};
+use bevy::render::render_resource::{BindGroup, BindGroupDescriptor, BindGroupEntry, BindGroupLayout, BindGroupLayoutDescriptor, BindGroupLayoutEntry, BindingType, BufferBindingType, BufferSize, CompareFunction, DynamicUniformVec, FrontFace, PrimitiveTopology, RenderPipelineCache, RenderPipelineDescriptor, ShaderStages, SpecializedPipeline, SpecializedPipelines, TextureFormat};
 use bevy::render::renderer::{RenderDevice, RenderQueue};
 use bevy::render::view::ExtractedView;
 use bevy::render::{RenderApp, RenderStage};
@@ -43,8 +38,7 @@ struct SkyboxPipeline {
 
 #[derive(Clone, AsStd140)]
 struct ViewExtraUniform {
-    view: Mat4,
-    inverse_projection: Mat4,
+    view_proj: Mat4,
 }
 
 #[derive(Default)]
@@ -125,6 +119,11 @@ impl SpecializedPipeline for SkyboxPipeline {
             self.mesh_pipeline.mesh_layout.clone(),
             self.view_extra_uniforms_bind_group_layout.clone(),
         ]);
+        let depth_stencil = descriptor.depth_stencil.as_mut().unwrap();
+        depth_stencil.depth_compare = CompareFunction::LessEqual;
+        depth_stencil.depth_write_enabled = false;
+        depth_stencil.format = TextureFormat::Depth32Float;
+        descriptor.primitive.front_face = FrontFace::Cw;
         descriptor
     }
 }
@@ -177,10 +176,10 @@ fn prepare_view_extra_uniforms(
 ) {
     view_extra_uniforms.uniforms.clear();
     for (entity, camera) in views.iter() {
+        let mut view = camera.transform.compute_matrix();
         let view_extra_uniforms = ViewExtraUniformOffset {
             offset: view_extra_uniforms.uniforms.push(ViewExtraUniform {
-                view: camera.transform.compute_matrix(),
-                inverse_projection: camera.projection.inverse(),
+                view_proj: camera.projection * view.inverse(),
             }),
         };
 
