@@ -11,7 +11,12 @@ use bevy::render::render_phase::{
     SetItemPipeline, TrackedRenderPass,
 };
 use bevy::render::render_resource::std140::AsStd140;
-use bevy::render::render_resource::{BindGroup, BindGroupDescriptor, BindGroupEntry, BindGroupLayout, BindGroupLayoutDescriptor, BindGroupLayoutEntry, BindingType, BufferBindingType, BufferSize, CompareFunction, DynamicUniformVec, FrontFace, PrimitiveTopology, RenderPipelineCache, RenderPipelineDescriptor, ShaderStages, SpecializedPipeline, SpecializedPipelines, TextureFormat};
+use bevy::render::render_resource::{
+    BindGroup, BindGroupDescriptor, BindGroupEntry, BindGroupLayout, BindGroupLayoutDescriptor,
+    BindGroupLayoutEntry, BindingType, BufferBindingType, BufferSize, CompareFunction,
+    DynamicUniformVec, FrontFace, PrimitiveTopology, RenderPipelineCache, RenderPipelineDescriptor,
+    ShaderStages, SpecializedPipeline, SpecializedPipelines, TextureFormat,
+};
 use bevy::render::renderer::{RenderDevice, RenderQueue};
 use bevy::render::view::ExtractedView;
 use bevy::render::{RenderApp, RenderStage};
