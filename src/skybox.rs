@@ -126,9 +126,9 @@ impl SpecializedPipeline for SkyboxPipeline {
         ]);
         let depth_stencil = descriptor.depth_stencil.as_mut().unwrap();
         depth_stencil.depth_compare = CompareFunction::LessEqual;
-        depth_stencil.depth_write_enabled = false;
-        depth_stencil.format = TextureFormat::Depth32Float;
-        descriptor.primitive.front_face = FrontFace::Cw;
+        // depth_stencil.depth_write_enabled = false;
+        // depth_stencil.format = TextureFormat::Depth32Float;
+        // descriptor.primitive.front_face = FrontFace::Cw;
         descriptor
     }
 }
@@ -182,6 +182,7 @@ fn prepare_view_extra_uniforms(
     view_extra_uniforms.uniforms.clear();
     for (entity, camera) in views.iter() {
         let mut view = camera.transform.compute_matrix();
+        view.w_axis = Vec4::new(0.0, 0.0, 0.0, 1.0);
         let view_extra_uniforms = ViewExtraUniformOffset {
             offset: view_extra_uniforms.uniforms.push(ViewExtraUniform {
                 view_proj: camera.projection * view.inverse(),
