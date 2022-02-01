@@ -1,6 +1,8 @@
-use crate::skybox::{SkyboxMaterial, SkyboxPlugin};
+use crate::skybox::SkyboxPlugin;
 use bevy::core::FixedTimestep;
 use bevy::prelude::*;
+use skybox::SkyboxMaterial;
+use crate::skybox::shape::SkyboxShape;
 
 mod skybox;
 mod utils;
@@ -53,7 +55,7 @@ fn setup(
     );
 
     commands.spawn().insert_bundle((
-        meshes.add(Mesh::from(shape::Cube { size: 1.0 })),
+        meshes.add(Mesh::from(SkyboxShape)),
         Transform::from_xyz(0.0, 0.5, 0.0),
         GlobalTransform::default(),
         SkyboxMaterial,
@@ -69,7 +71,7 @@ fn setup(
 
     commands
         .spawn_bundle(PerspectiveCameraBundle {
-            transform: Transform::from_xyz(0.0, 20.0, -35.0)
+            transform: Transform::from_xyz(0.0, 20.0, 30.0)
                 .looking_at(Vec3::new(0.0, 0.0, 0.0), Vec3::Y),
             ..Default::default()
         })

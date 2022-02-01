@@ -13,7 +13,7 @@ struct Vertex {
 
 struct VertexOutput {
     [[builtin(position)]] position: vec4<f32>;
-    [[location(0)]] uv: vec3<f32>;
+    [[location(0)]] uv: vec2<f32>;
 };
 
 [[group(1), binding(0)]]
@@ -26,7 +26,8 @@ var<uniform> g_extra: ViewExtra;
 fn vertex(vertex: Vertex) -> VertexOutput {
     var out: VertexOutput;
 
-    out.position = (g_extra.view_proj * g_mesh.model * vec4<f32>(vertex.position, 1.0)).xyww;
+    out.position = (view.view_proj * g_mesh.model * vec4<f32>(300.0 * vertex.position, 1.0)).xyzw;
+    out.uv = vertex.uv;
 
     return out;
 }
