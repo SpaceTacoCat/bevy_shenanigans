@@ -26,7 +26,7 @@ var<uniform> g_extra: ViewExtra;
 fn vertex(vertex: Vertex) -> VertexOutput {
     var out: VertexOutput;
 
-    out.position = (view.projection * g_extra.untranslated_view * g_mesh.model * vec4<f32>(10.0 * vertex.position, 1.0)).xyww;
+    out.position = (view.projection * g_extra.untranslated_view * g_mesh.model * vec4<f32>(1000.0 * vertex.position, 1.0)).xyww;
     out.uv = vertex.position;
 
     return out;

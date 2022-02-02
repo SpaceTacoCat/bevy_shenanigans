@@ -19,7 +19,8 @@ pub type SkyboxDrawCustom = (
 );
 
 pub struct SkyboxPipeline {
-    shader: Handle<Shader>,
+    vertex: Handle<Shader>,
+    fragment: Handle<Shader>,
     mesh_pipeline: MeshPipeline,
     pub view_extra_uniforms_bind_group_layout: BindGroupLayout,
 }
@@ -50,7 +51,8 @@ impl FromWorld for SkyboxPipeline {
     fn from_world(world: &mut World) -> Self {
         let world = world.cell();
         let asset_server = world.get_resource::<AssetServer>().unwrap();
-        let shader = asset_server.load("shaders/skybox.wgsl");
+        let vertex = asset_server.load("shaders/skybox.vert");
+        let fragment = asset_server.load("shaders/skybox.frag");
 
         let render_device = world.get_resource_mut::<RenderDevice>().unwrap();
         let view_extra_uniforms_bind_group_layout =
@@ -73,7 +75,8 @@ impl FromWorld for SkyboxPipeline {
         let mesh_pipeline = world.get_resource::<MeshPipeline>().unwrap();
 
         SkyboxPipeline {
-            shader,
+            vertex,
+            fragment,
             mesh_pipeline: mesh_pipeline.clone(),
             view_extra_uniforms_bind_group_layout,
         }
@@ -85,8 +88,13 @@ impl SpecializedPipeline for SkyboxPipeline {
 
     fn specialize(&self, key: Self::Key) -> RenderPipelineDescriptor {
         let mut descriptor = self.mesh_pipeline.specialize(key);
-        descriptor.vertex.shader = self.shader.clone();
-        descriptor.fragment.as_mut().unwrap().shader = self.shader.clone();
+        descriptor.vertex.shader = self.vertex.clone();
+        descriptor.vertex.entry_point = "main".into();
+        descriptor.fragment = descriptor.fragment.map(|mut fragment| {
+            fragment.entry_point = "main".into();
+            fragment.shader = self.fragment.clone();
+            fragment
+        });
         descriptor.layout = Some(vec![
             self.mesh_pipeline.view_layout.clone(),
             self.mesh_pipeline.mesh_layout.clone(),
