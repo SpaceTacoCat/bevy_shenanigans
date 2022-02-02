@@ -7,7 +7,7 @@ use bevy::render::render_phase::{
     EntityRenderCommand, RenderCommandResult, SetItemPipeline, TrackedRenderPass,
 };
 use bevy::render::render_resource::std140::AsStd140;
-use bevy::render::render_resource::{BindGroup, BindGroupLayout, BindGroupLayoutDescriptor, BindGroupLayoutEntry, BindingType, BufferBindingType, BufferSize, CompareFunction, DepthBiasState, DynamicUniformVec, PrimitiveState, RenderPipelineDescriptor, ShaderStages, SpecializedPipeline, StencilFaceState, StencilState, TextureFormat};
+use bevy::render::render_resource::{BindGroup, BindGroupLayout, BindGroupLayoutDescriptor, BindGroupLayoutEntry, BindingType, BufferBindingType, BufferSize, CompareFunction, DynamicUniformVec, PrimitiveState, RenderPipelineDescriptor, SamplerBindingType, ShaderStages, SpecializedPipeline, TextureSampleType, TextureViewDimension};
 use bevy::render::renderer::RenderDevice;
 
 pub type SkyboxDrawCustom = (
@@ -19,8 +19,7 @@ pub type SkyboxDrawCustom = (
 );
 
 pub struct SkyboxPipeline {
-    vertex: Handle<Shader>,
-    fragment: Handle<Shader>,
+    shader: Handle<Shader>,
     mesh_pipeline: MeshPipeline,
     pub view_extra_uniforms_bind_group_layout: BindGroupLayout,
 }
@@ -51,8 +50,7 @@ impl FromWorld for SkyboxPipeline {
     fn from_world(world: &mut World) -> Self {
         let world = world.cell();
         let asset_server = world.get_resource::<AssetServer>().unwrap();
-        let vertex = asset_server.load("shaders/skybox.vert");
-        let fragment = asset_server.load("shaders/skybox.frag");
+        let shader = asset_server.load("shaders/skybox.wgsl");
 
         let render_device = world.get_resource_mut::<RenderDevice>().unwrap();
         let view_extra_uniforms_bind_group_layout =
@@ -75,8 +73,7 @@ impl FromWorld for SkyboxPipeline {
         let mesh_pipeline = world.get_resource::<MeshPipeline>().unwrap();
 
         SkyboxPipeline {
-            vertex,
-            fragment,
+            shader,
             mesh_pipeline: mesh_pipeline.clone(),
             view_extra_uniforms_bind_group_layout,
         }
@@ -88,11 +85,9 @@ impl SpecializedPipeline for SkyboxPipeline {
 
     fn specialize(&self, key: Self::Key) -> RenderPipelineDescriptor {
         let mut descriptor = self.mesh_pipeline.specialize(key);
-        descriptor.vertex.shader = self.vertex.clone();
-        descriptor.vertex.entry_point = "main".into();
+        descriptor.vertex.shader = self.shader.clone();
         descriptor.fragment = descriptor.fragment.map(|mut fragment| {
-            fragment.entry_point = "main".into();
-            fragment.shader = self.fragment.clone();
+            fragment.shader = self.shader.clone();
             fragment
         });
         descriptor.layout = Some(vec![
@@ -100,8 +95,12 @@ impl SpecializedPipeline for SkyboxPipeline {
             self.mesh_pipeline.mesh_layout.clone(),
             self.view_extra_uniforms_bind_group_layout.clone(),
         ]);
+        descriptor.primitive = PrimitiveState {
+            unclipped_depth: true,
+            ..Default::default()
+        };
         descriptor.depth_stencil = descriptor.depth_stencil.map(|mut depth_stencil| {
-            depth_stencil.depth_compare = CompareFunction::LessEqual;
+            depth_stencil.depth_compare = CompareFunction::GreaterEqual;
             depth_stencil
         });
         descriptor

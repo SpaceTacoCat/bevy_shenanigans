@@ -2,6 +2,7 @@ use crate::skybox::pipeline::{
     SkyboxDrawCustom, SkyboxPipeline, ViewExtraBindGroup, ViewExtraUniform, ViewExtraUniformOffset,
     ViewExtraUniforms,
 };
+use crate::MainCamera;
 use bevy::core_pipeline::Transparent3d;
 use bevy::pbr::{MeshPipelineKey, MeshUniform};
 use bevy::prelude::*;
@@ -14,8 +15,8 @@ use bevy::render::renderer::{RenderDevice, RenderQueue};
 use bevy::render::view::ExtractedView;
 use bevy::render::{RenderApp, RenderStage};
 
-pub mod shape;
 pub mod pipeline;
+pub mod shape;
 
 pub struct SkyboxPlugin;
 
@@ -24,6 +25,8 @@ pub struct SkyboxMaterial;
 
 impl Plugin for SkyboxPlugin {
     fn build(&self, app: &mut App) {
+        app.add_system_to_stage(CoreStage::Update, move_skybox_with_camera);
+
         let render_app = app.sub_app_mut(RenderApp);
         render_app
             .add_render_command::<Transparent3d, SkyboxDrawCustom>()
@@ -34,6 +37,17 @@ impl Plugin for SkyboxPlugin {
             .add_system_to_stage(RenderStage::Prepare, prepare_view_extra_uniforms)
             .add_system_to_stage(RenderStage::Queue, queue_skybox_pipeline)
             .add_system_to_stage(RenderStage::Queue, queue_view_extra_bind_group);
+    }
+}
+
+fn move_skybox_with_camera(
+    mut q_skybox: Query<&mut Transform, With<SkyboxMaterial>>,
+    q_camera: Query<&Transform, (With<MainCamera>, Without<SkyboxMaterial>)>,
+) {
+    if let Ok(camera) = q_camera.get_single() {
+        for mut skybox in q_skybox.iter_mut() {
+            skybox.translation = camera.translation;
+        }
     }
 }
 
