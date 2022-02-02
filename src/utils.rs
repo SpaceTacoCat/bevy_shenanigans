@@ -11,7 +11,7 @@ pub fn camera_rotate_around_center_point(
 }
 
 #[allow(dead_code)]
-fn camera_follow_spaceship(
+pub fn camera_follow_spaceship(
     mut q_camera: Query<&mut Transform, With<MainCamera>>,
     q_spaceship: Query<&Children, With<PlayerShip>>,
     q_transforms: Query<&Transform, Without<MainCamera>>,
@@ -34,7 +34,7 @@ fn camera_follow_spaceship(
 }
 
 #[allow(dead_code)]
-fn auto_fly_ship(
+pub fn auto_fly_ship(
     q_spaceship: Query<&Children, With<PlayerShip>>,
     mut q_transforms: Query<&mut Transform>,
 ) {

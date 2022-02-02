@@ -7,7 +7,7 @@ use bevy::render::render_phase::{
     EntityRenderCommand, RenderCommandResult, SetItemPipeline, TrackedRenderPass,
 };
 use bevy::render::render_resource::std140::AsStd140;
-use bevy::render::render_resource::{BindGroup, BindGroupLayout, BindGroupLayoutDescriptor, BindGroupLayoutEntry, BindingType, BufferBindingType, BufferSize, CompareFunction, DynamicUniformVec, RenderPipelineDescriptor, ShaderStages, SpecializedPipeline};
+use bevy::render::render_resource::{BindGroup, BindGroupLayout, BindGroupLayoutDescriptor, BindGroupLayoutEntry, BindingType, BufferBindingType, BufferSize, CompareFunction, DepthBiasState, DynamicUniformVec, PrimitiveState, RenderPipelineDescriptor, ShaderStages, SpecializedPipeline, StencilFaceState, StencilState, TextureFormat};
 use bevy::render::renderer::RenderDevice;
 
 pub type SkyboxDrawCustom = (
@@ -26,7 +26,7 @@ pub struct SkyboxPipeline {
 
 #[derive(Clone, AsStd140)]
 pub struct ViewExtraUniform {
-    pub view_proj: Mat4,
+    pub untranslated_view: Mat4,
 }
 
 #[derive(Default)]
@@ -92,9 +92,11 @@ impl SpecializedPipeline for SkyboxPipeline {
             self.mesh_pipeline.mesh_layout.clone(),
             self.view_extra_uniforms_bind_group_layout.clone(),
         ]);
-        let depth_stencil = descriptor.depth_stencil.as_mut().unwrap();
-        depth_stencil.depth_compare = CompareFunction::GreaterEqual;
-        depth_stencil.depth_write_enabled = true;
+        descriptor.depth_stencil = descriptor.depth_stencil.map(|mut depth_stencil| {
+            depth_stencil.depth_write_enabled = true;
+            depth_stencil.depth_compare = CompareFunction::LessEqual;
+            depth_stencil
+        });
         descriptor
     }
 }

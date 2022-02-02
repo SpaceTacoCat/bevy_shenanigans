@@ -3,6 +3,7 @@ use bevy::core::FixedTimestep;
 use bevy::prelude::*;
 use skybox::SkyboxMaterial;
 use crate::skybox::shape::SkyboxShape;
+use crate::utils::{auto_fly_ship, camera_follow_spaceship};
 
 mod skybox;
 mod utils;
@@ -25,15 +26,15 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .add_plugin(SkyboxPlugin)
         .add_startup_system(setup)
-        .add_stage_after(
-            CoreStage::Update,
-            FixedUpdateStage,
-            SystemStage::parallel()
-                .with_run_criteria(FixedTimestep::step(1.0 / 60.0).with_label("fixed_timestep"))
-                .with_system(utils::camera_rotate_around_center_point),
-        )
-        // .add_system_to_stage(CoreStage::Update, auto_fly_ship)
-        // .add_system_to_stage(CoreStage::Update, camera_follow_spaceship)
+        // .add_stage_after(
+        //     CoreStage::Update,
+        //     FixedUpdateStage,
+        //     SystemStage::parallel()
+        //         .with_run_criteria(FixedTimestep::step(1.0 / 60.0).with_label("fixed_timestep"))
+        //         .with_system(utils::camera_rotate_around_center_point),
+        // )
+        .add_system_to_stage(CoreStage::Update, auto_fly_ship)
+        .add_system_to_stage(CoreStage::Update, camera_follow_spaceship)
         .run();
 }
 
@@ -54,6 +55,10 @@ fn setup(
         player_ship_entity,
     );
 
+    // commands.spawn().insert_bundle(PbrBundle {
+    //     mesh: meshes.add(Mesh::from(SkyboxShape)),
+    //     ..Default::default()
+    // }).insert(SkyboxMaterial);
     commands.spawn().insert_bundle((
         meshes.add(Mesh::from(SkyboxShape)),
         Transform::from_xyz(0.0, 0.5, 0.0),
@@ -73,6 +78,10 @@ fn setup(
         .spawn_bundle(PerspectiveCameraBundle {
             transform: Transform::from_xyz(0.0, 20.0, 30.0)
                 .looking_at(Vec3::new(0.0, 0.0, 0.0), Vec3::Y),
+            perspective_projection: PerspectiveProjection {
+                far: f32::INFINITY,
+                ..Default::default()
+            },
             ..Default::default()
         })
         .insert(MainCamera);

@@ -2,7 +2,7 @@
 #import bevy_pbr::mesh_struct
 
 struct ViewExtra {
-    view_proj: mat4x4<f32>;
+    untranslated_view: mat4x4<f32>;
 };
 
 struct Vertex {
@@ -13,7 +13,7 @@ struct Vertex {
 
 struct VertexOutput {
     [[builtin(position)]] position: vec4<f32>;
-    [[location(0)]] uv: vec2<f32>;
+    [[location(0)]] uv: vec3<f32>;
 };
 
 [[group(1), binding(0)]]
@@ -26,8 +26,8 @@ var<uniform> g_extra: ViewExtra;
 fn vertex(vertex: Vertex) -> VertexOutput {
     var out: VertexOutput;
 
-    out.position = (view.view_proj * g_mesh.model * vec4<f32>(300.0 * vertex.position, 1.0)).xyzw;
-    out.uv = vertex.uv;
+    out.position = (view.projection * g_extra.untranslated_view * g_mesh.model * vec4<f32>(10.0 * vertex.position, 1.0)).xyww;
+    out.uv = vertex.position;
 
     return out;
 }

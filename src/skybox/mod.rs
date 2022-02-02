@@ -72,10 +72,10 @@ fn prepare_view_extra_uniforms(
     for (entity, camera) in views.iter() {
         let view = camera.transform.compute_matrix();
         let (scale, rotation, _) = view.to_scale_rotation_translation();
-        let view = Mat4::from_scale_rotation_translation(scale, rotation, Vec3::ZERO);
+        let untranslated_cam = Mat4::from_scale_rotation_translation(scale, rotation, Vec3::ZERO);
         let view_extra_uniforms = ViewExtraUniformOffset {
             offset: view_extra_uniforms.uniforms.push(ViewExtraUniform {
-                view_proj: camera.projection * view.inverse(),
+                untranslated_view: untranslated_cam.inverse(),
             }),
         };
 
