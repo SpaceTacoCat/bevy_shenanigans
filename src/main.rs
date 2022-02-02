@@ -33,8 +33,8 @@ fn main() {
         //         .with_run_criteria(FixedTimestep::step(1.0 / 60.0).with_label("fixed_timestep"))
         //         .with_system(utils::camera_rotate_around_center_point),
         // )
-        .add_system_to_stage(CoreStage::Update, auto_fly_ship)
-        .add_system_to_stage(CoreStage::Update, camera_follow_spaceship)
+        .add_startup_system(auto_fly_ship)
+        .add_startup_system(camera_follow_spaceship)
         .run();
 }
 

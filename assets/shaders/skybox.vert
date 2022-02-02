@@ -15,6 +15,6 @@ layout(set = 2, binding = 0) uniform Extras {
 };
 
 void main() {
-    vec4 pos = ViewProj * Model * vec4(Vertex_Position, 1.0);
+    vec4 pos = ViewProj * Model * vec4(10.0 * Vertex_Position, 1.0);
     gl_Position = pos.xyzw;
 }

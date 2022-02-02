@@ -101,7 +101,6 @@ impl SpecializedPipeline for SkyboxPipeline {
             self.view_extra_uniforms_bind_group_layout.clone(),
         ]);
         descriptor.depth_stencil = descriptor.depth_stencil.map(|mut depth_stencil| {
-            depth_stencil.depth_write_enabled = true;
             depth_stencil.depth_compare = CompareFunction::LessEqual;
             depth_stencil
         });
