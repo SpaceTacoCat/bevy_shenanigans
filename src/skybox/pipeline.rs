@@ -1,37 +1,46 @@
 use crate::{AssetServer, Entity, FromWorld, Handle, Mat4, Shader, World};
-use bevy::ecs::system::lifetimeless::{Read, SQuery};
+use bevy::ecs::system::lifetimeless::{Read, SQuery, SRes};
 use bevy::ecs::system::SystemParamItem;
-use bevy::pbr::{DrawMesh, MeshPipeline, MeshPipelineKey, SetMeshBindGroup, SetMeshViewBindGroup};
+use bevy::pbr::{
+    DrawMesh, MaterialPipeline, MeshPipeline, MeshPipelineKey, SetMeshBindGroup,
+    SetMeshViewBindGroup,
+};
 use bevy::prelude::*;
+use bevy::render::render_asset::RenderAssets;
 use bevy::render::render_phase::{
     EntityRenderCommand, RenderCommandResult, SetItemPipeline, TrackedRenderPass,
 };
 use bevy::render::render_resource::std140::AsStd140;
-use bevy::render::render_resource::{BindGroup, BindGroupLayout, BindGroupLayoutDescriptor, BindGroupLayoutEntry, BindingType, BufferBindingType, BufferSize, CompareFunction, DynamicUniformVec, PrimitiveState, RenderPipelineDescriptor, SamplerBindingType, ShaderStages, SpecializedPipeline, TextureSampleType, TextureViewDimension};
+use bevy::render::render_resource::{
+    BindGroup, BindGroupLayout, BindGroupLayoutDescriptor, BindGroupLayoutEntry, BindingType,
+    BufferBindingType, BufferSize, CompareFunction, DynamicUniformVec, PrimitiveState,
+    RenderPipelineDescriptor, SamplerBindingType, ShaderStages, SpecializedPipeline, Texture,
+    TextureSampleType, TextureView, TextureViewDimension,
+};
 use bevy::render::renderer::RenderDevice;
 
 pub type SkyboxDrawCustom = (
     SetItemPipeline,
     SetMeshViewBindGroup<0>,
     SetMeshBindGroup<1>,
-    SetViewExtraBindGroup<2>,
+    SetExtraBindGroup<2>,
     DrawMesh,
 );
 
 pub struct SkyboxPipeline {
     shader: Handle<Shader>,
-    mesh_pipeline: MeshPipeline,
-    pub view_extra_uniforms_bind_group_layout: BindGroupLayout,
+    pub mesh_pipeline: MeshPipeline,
+    pub extra_bind_group_layout: BindGroupLayout,
 }
 
 #[derive(Clone, AsStd140)]
-pub struct ViewExtraUniform {
+pub struct Extras {
     pub untranslated_view: Mat4,
 }
 
 #[derive(Default)]
 pub struct ViewExtraUniforms {
-    pub uniforms: DynamicUniformVec<ViewExtraUniform>,
+    pub uniforms: DynamicUniformVec<Extras>,
 }
 
 #[derive(Component)]
@@ -39,10 +48,10 @@ pub struct ViewExtraUniformOffset {
     pub offset: u32,
 }
 
-pub struct SetViewExtraBindGroup<const I: usize>;
+pub struct SetExtraBindGroup<const I: usize>;
 
 #[derive(Clone, Component)]
-pub struct ViewExtraBindGroup {
+pub struct ExtraBindGroup {
     pub value: BindGroup,
 }
 
@@ -53,21 +62,37 @@ impl FromWorld for SkyboxPipeline {
         let shader = asset_server.load("shaders/skybox.wgsl");
 
         let render_device = world.get_resource_mut::<RenderDevice>().unwrap();
-        let view_extra_uniforms_bind_group_layout =
+        let extra_bind_group_layout =
             render_device.create_bind_group_layout(&BindGroupLayoutDescriptor {
                 label: Some("view extra uniforms bind group"),
-                entries: &[BindGroupLayoutEntry {
-                    binding: 0,
-                    visibility: ShaderStages::VERTEX | ShaderStages::FRAGMENT,
-                    ty: BindingType::Buffer {
-                        ty: BufferBindingType::Uniform,
-                        has_dynamic_offset: true,
-                        min_binding_size: BufferSize::new(
-                            ViewExtraUniform::std140_size_static() as u64
-                        ),
+                entries: &[
+                    BindGroupLayoutEntry {
+                        binding: 0,
+                        visibility: ShaderStages::VERTEX | ShaderStages::FRAGMENT,
+                        ty: BindingType::Buffer {
+                            ty: BufferBindingType::Uniform,
+                            has_dynamic_offset: true,
+                            min_binding_size: BufferSize::new(Extras::std140_size_static() as u64),
+                        },
+                        count: None,
                     },
-                    count: None,
-                }],
+                    BindGroupLayoutEntry {
+                        binding: 1,
+                        visibility: ShaderStages::FRAGMENT,
+                        ty: BindingType::Texture {
+                            sample_type: TextureSampleType::Float { filterable: true },
+                            view_dimension: TextureViewDimension::D2,
+                            multisampled: false,
+                        },
+                        count: None,
+                    },
+                    BindGroupLayoutEntry {
+                        binding: 2,
+                        visibility: ShaderStages::FRAGMENT,
+                        ty: BindingType::Sampler(SamplerBindingType::Filtering),
+                        count: None,
+                    },
+                ],
             });
 
         let mesh_pipeline = world.get_resource::<MeshPipeline>().unwrap();
@@ -75,7 +100,7 @@ impl FromWorld for SkyboxPipeline {
         SkyboxPipeline {
             shader,
             mesh_pipeline: mesh_pipeline.clone(),
-            view_extra_uniforms_bind_group_layout,
+            extra_bind_group_layout,
         }
     }
 }
@@ -93,7 +118,7 @@ impl SpecializedPipeline for SkyboxPipeline {
         descriptor.layout = Some(vec![
             self.mesh_pipeline.view_layout.clone(),
             self.mesh_pipeline.mesh_layout.clone(),
-            self.view_extra_uniforms_bind_group_layout.clone(),
+            self.extra_bind_group_layout.clone(),
         ]);
         descriptor.primitive = PrimitiveState {
             unclipped_depth: true,
@@ -107,8 +132,8 @@ impl SpecializedPipeline for SkyboxPipeline {
     }
 }
 
-impl<const I: usize> EntityRenderCommand for SetViewExtraBindGroup<I> {
-    type Param = SQuery<(Read<ViewExtraUniformOffset>, Read<ViewExtraBindGroup>)>;
+impl<const I: usize> EntityRenderCommand for SetExtraBindGroup<I> {
+    type Param = SQuery<(Read<ViewExtraUniformOffset>, Read<ExtraBindGroup>)>;
 
     fn render<'w>(
         view: Entity,
@@ -116,7 +141,7 @@ impl<const I: usize> EntityRenderCommand for SetViewExtraBindGroup<I> {
         query: SystemParamItem<'w, '_, Self::Param>,
         pass: &mut TrackedRenderPass<'w>,
     ) -> RenderCommandResult {
-        let (view_extra_uniform, bind_group) = query.get(view).unwrap();
+        let Ok((view_extra_uniform, bind_group)) = query.get(view) else { return RenderCommandResult::Failure };
         pass.set_bind_group(I, &bind_group.value, &[view_extra_uniform.offset]);
         RenderCommandResult::Success
     }

@@ -11,4 +11,4 @@ path = "src/main.rs"
 [dependencies]
 bevy = { git = "https://github.com/bevyengine/bevy.git", features = ["dynamic"] }
 #bevy = { version = "0.6.0", features = ["dynamic"] }
-#bevy = { path = "../bevy", features = [] }
+#bevy = { path = "../bevy", features = ["dynamic"] }

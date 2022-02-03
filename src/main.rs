@@ -1,6 +1,9 @@
+#![feature(let_else)]
+
 use crate::skybox::shape::SkyboxShape;
 use crate::skybox::SkyboxPlugin;
 use crate::utils::{auto_fly_ship, camera_follow_spaceship};
+use bevy::core::FixedTimestep;
 use bevy::prelude::*;
 use skybox::SkyboxMaterial;
 
@@ -25,15 +28,15 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .add_plugin(SkyboxPlugin)
         .add_startup_system(setup)
-        // .add_stage_after(
-        //     CoreStage::Update,
-        //     FixedUpdateStage,
-        //     SystemStage::parallel()
-        //         .with_run_criteria(FixedTimestep::step(1.0 / 60.0).with_label("fixed_timestep"))
-        //         .with_system(utils::camera_rotate_around_center_point),
-        // )
+        .add_stage_after(
+            CoreStage::Update,
+            FixedUpdateStage,
+            SystemStage::parallel()
+                .with_run_criteria(FixedTimestep::step(1.0 / 60.0).with_label("fixed_timestep"))
+                .with_system(utils::camera_rotate_around_center_point),
+        )
         .add_system_to_stage(CoreStage::Update, auto_fly_ship)
-        .add_system_to_stage(CoreStage::Update, camera_follow_spaceship)
+        // .add_system_to_stage(CoreStage::Update, camera_follow_spaceship)
         .run();
 }
 
@@ -62,7 +65,9 @@ fn setup(
         meshes.add(Mesh::from(SkyboxShape)),
         Transform::from_xyz(0.0, 0.5, 0.0),
         GlobalTransform::default(),
-        SkyboxMaterial,
+        SkyboxMaterial {
+            texture: asset_server.load("textures/sky.png"),
+        },
         Visibility::default(),
         ComputedVisibility::default(),
     ));
