@@ -9,17 +9,14 @@ use bevy::prelude::*;
 use bevy::render::render_asset::RenderAssets;
 use bevy::render::render_phase::{AddRenderCommand, DrawFunctions, RenderPhase};
 use bevy::render::render_resource::{
-    BindGroupDescriptor, BindGroupEntry, BindingResource, PrimitiveTopology, RenderPipelineCache,
-    SpecializedPipeline, SpecializedPipelines, Texture, TextureViewDescriptor,
+    BindGroupDescriptor, BindGroupEntry, BindingResource, PrimitiveTopology, RenderPipelineCache, SpecializedPipelines, TextureViewDescriptor,
     TextureViewDimension,
 };
 use bevy::render::renderer::{RenderDevice, RenderQueue};
 use bevy::render::view::ExtractedView;
 use bevy::render::{RenderApp, RenderStage};
-use std::num::NonZeroU32;
 
 pub mod pipeline;
-pub mod shape;
 
 pub struct SkyboxPlugin;
 
@@ -28,9 +25,16 @@ pub struct SkyboxMaterial {
     pub texture: Handle<Image>,
 }
 
+#[derive(Default)]
+pub struct SkyboxTextureConversionQueue {
+    queue: Vec<Handle<Image>>,
+}
+
 impl Plugin for SkyboxPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system_to_stage(CoreStage::Update, move_skybox_with_camera);
+        app.add_system_to_stage(CoreStage::Update, move_skybox_with_camera)
+            .init_resource::<SkyboxTextureConversionQueue>()
+            .add_system(process_skybox_texture_conversion_queue);
 
         let render_app = app.sub_app_mut(RenderApp);
         render_app
@@ -42,6 +46,33 @@ impl Plugin for SkyboxPlugin {
             .add_system_to_stage(RenderStage::Prepare, prepare_view_extra_uniforms)
             .add_system_to_stage(RenderStage::Queue, queue_skybox_pipeline)
             .add_system_to_stage(RenderStage::Queue, queue_view_extra_bind_group);
+    }
+}
+
+impl SkyboxTextureConversionQueue {
+    pub fn add(&mut self, handle: Handle<Image>) {
+        self.queue.push(handle);
+    }
+}
+
+fn process_skybox_texture_conversion_queue(
+    mut conversion_queue: ResMut<SkyboxTextureConversionQueue>,
+    mut images: ResMut<Assets<Image>>,
+) {
+    let mut i = 0;
+    loop {
+        match conversion_queue.queue.get(i) {
+            None => break,
+            Some(item) => match images.get_mut(item) {
+                None => {
+                    i += 1;
+                }
+                Some(image) => {
+                    conversion_queue.queue.remove(i);
+                    image.reinterpret_stacked_2d_as_array(6);
+                }
+            },
+        }
     }
 }
 
@@ -67,10 +98,19 @@ fn queue_view_extra_bind_group(
 ) {
     let (_, skybox) = skybox.get_single().unwrap();
 
-    let Some((texture_view, sampler)) = skybox_pipeline
-        .mesh_pipeline
-        .get_image_texture(gpu_images.as_ref(), &Some(skybox.texture.clone()))
-        else { return };
+    // let Some((texture_view, sampler)) = skybox_pipeline
+    //     .mesh_pipeline
+    //     .get_image_texture(gpu_images.as_ref(), &Some(skybox.texture.clone()))
+    //     else { return };
+
+    let Some(image) = gpu_images
+        .get(&skybox.texture) else {return};
+
+    let texture_view = image.texture.create_view(&TextureViewDescriptor {
+        dimension: Some(TextureViewDimension::D2Array),
+        ..Default::default()
+    });
+    let sampler = &image.sampler;
 
     if let Some(binding) = extras.uniforms.binding() {
         let group = ExtraBindGroup {

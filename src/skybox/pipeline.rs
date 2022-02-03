@@ -1,12 +1,11 @@
 use crate::{AssetServer, Entity, FromWorld, Handle, Mat4, Shader, World};
-use bevy::ecs::system::lifetimeless::{Read, SQuery, SRes};
+use bevy::ecs::system::lifetimeless::{Read, SQuery};
 use bevy::ecs::system::SystemParamItem;
 use bevy::pbr::{
-    DrawMesh, MaterialPipeline, MeshPipeline, MeshPipelineKey, SetMeshBindGroup,
+    DrawMesh, MeshPipeline, MeshPipelineKey, SetMeshBindGroup,
     SetMeshViewBindGroup,
 };
 use bevy::prelude::*;
-use bevy::render::render_asset::RenderAssets;
 use bevy::render::render_phase::{
     EntityRenderCommand, RenderCommandResult, SetItemPipeline, TrackedRenderPass,
 };
@@ -14,8 +13,8 @@ use bevy::render::render_resource::std140::AsStd140;
 use bevy::render::render_resource::{
     BindGroup, BindGroupLayout, BindGroupLayoutDescriptor, BindGroupLayoutEntry, BindingType,
     BufferBindingType, BufferSize, CompareFunction, DynamicUniformVec, PrimitiveState,
-    RenderPipelineDescriptor, SamplerBindingType, ShaderStages, SpecializedPipeline, Texture,
-    TextureSampleType, TextureView, TextureViewDimension,
+    RenderPipelineDescriptor, SamplerBindingType, ShaderStages, SpecializedPipeline,
+    TextureSampleType, TextureViewDimension,
 };
 use bevy::render::renderer::RenderDevice;
 
@@ -81,7 +80,7 @@ impl FromWorld for SkyboxPipeline {
                         visibility: ShaderStages::FRAGMENT,
                         ty: BindingType::Texture {
                             sample_type: TextureSampleType::Float { filterable: true },
-                            view_dimension: TextureViewDimension::D2,
+                            view_dimension: TextureViewDimension::D2Array,
                             multisampled: false,
                         },
                         count: None,

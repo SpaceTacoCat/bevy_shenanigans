@@ -1,16 +1,6 @@
-use crate::{Children, MainCamera, PlayerShip, Query, Res, Time, Transform, Vec3, With, Without};
+use crate::{MainCamera, PlayerShip};
+use bevy::prelude::*;
 
-pub fn camera_rotate_around_center_point(
-    time: Res<Time>,
-    mut q_camera: Query<&mut Transform, With<MainCamera>>,
-) {
-    let mut camera = q_camera.single_mut();
-    let time = time.time_since_startup().as_secs_f32();
-    camera.translation = Vec3::new(50.0 * time.cos(), 20.0, 50.0 * time.sin());
-    camera.look_at(Vec3::new(0.0, 0.0, 0.0), Vec3::Y);
-}
-
-#[allow(dead_code)]
 pub fn camera_follow_spaceship(
     mut q_camera: Query<&mut Transform, With<MainCamera>>,
     q_spaceship: Query<&Children, With<PlayerShip>>,
@@ -33,7 +23,6 @@ pub fn camera_follow_spaceship(
     camera.look_at(ship_object.translation + Vec3::Y * 5.0, Vec3::Y);
 }
 
-#[allow(dead_code)]
 pub fn auto_fly_ship(
     q_spaceship: Query<&Children, With<PlayerShip>>,
     mut q_transforms: Query<&mut Transform>,
