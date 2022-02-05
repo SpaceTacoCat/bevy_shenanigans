@@ -1,12 +1,12 @@
 #![feature(let_else)]
 #![feature(linked_list_cursors)]
+#![feature(adt_const_params)]
 
-use crate::skybox::{SkyboxPlugin, SkyboxTextureConversionQueue};
+use crate::materials::skybox::{SkyboxPlugin};
 use crate::utils::{auto_fly_ship, camera_follow_spaceship};
 use bevy::prelude::*;
-use skybox::SkyboxMaterial;
 
-mod skybox;
+mod materials;
 mod utils;
 
 #[derive(Component)]
@@ -25,7 +25,7 @@ fn main() {
             brightness: 0.5,
         })
         .add_plugins(DefaultPlugins)
-        .add_plugin(SkyboxPlugin)
+        .add_plugin(SkyboxPlugin::<"textures/sky.png">)
         .add_startup_system(setup)
         .add_system_to_stage(CoreStage::Update, auto_fly_ship)
         .add_system_to_stage(CoreStage::Update, camera_follow_spaceship)
@@ -37,11 +37,7 @@ fn setup(
     mut scene_spawner: ResMut<SceneSpawner>,
     asset_server: Res<AssetServer>,
     mut meshes: ResMut<Assets<Mesh>>,
-    mut conversion_queue: ResMut<SkyboxTextureConversionQueue>,
 ) {
-    let skybox_texture = asset_server.load("textures/labeled_skybox.png");
-    conversion_queue.add(skybox_texture.clone());
-
     let player_ship_entity = commands
         .spawn()
         .insert(Transform::default())
@@ -53,19 +49,8 @@ fn setup(
         player_ship_entity,
     );
 
-    commands.spawn().insert_bundle((
-        meshes.add(Mesh::from(shape::Cube { size: 1.0 })),
-        Transform::from_xyz(0.0, 0.5, 0.0),
-        GlobalTransform::default(),
-        SkyboxMaterial {
-            texture: skybox_texture,
-        },
-        Visibility::default(),
-        ComputedVisibility::default(),
-    ));
-
     commands.spawn_bundle(PbrBundle {
-        mesh: asset_server.load("models/cube.gltf#Mesh0"),
+        mesh: meshes.add(Mesh::from(shape::Cube { size: 1.0 })),
         transform: Transform::from_xyz(5.0, 0.0, 5.0),
         ..Default::default()
     });

@@ -20,12 +20,9 @@ struct VertexOutput {
 var<uniform> g_mesh: Mesh;
 
 [[group(2), binding(0)]]
-var<uniform> g_extra: ExtraData;
-
-[[group(2), binding(1)]]
 var g_texture: texture_2d_array<f32>;
 
-[[group(2), binding(2)]]
+[[group(2), binding(1)]]
 var g_sampler: sampler;
 
 [[stage(vertex)]]
