@@ -1,8 +1,8 @@
 #![feature(let_else)]
-#![feature(linked_list_cursors)]
-#![feature(adt_const_params)]
 
-use crate::materials::skybox::{SkyboxPlugin};
+use crate::materials::grid::GridPlugin;
+use crate::materials::skybox::SkyboxPlugin;
+use crate::materials::{grid, skybox};
 use crate::utils::{auto_fly_ship, camera_follow_spaceship};
 use bevy::prelude::*;
 
@@ -25,7 +25,8 @@ fn main() {
             brightness: 0.5,
         })
         .add_plugins(DefaultPlugins)
-        .add_plugin(SkyboxPlugin::<"textures/sky.png">)
+        .add_plugin(SkyboxPlugin)
+        .add_plugin(GridPlugin)
         .add_startup_system(setup)
         .add_system_to_stage(CoreStage::Update, auto_fly_ship)
         .add_system_to_stage(CoreStage::Update, camera_follow_spaceship)
@@ -57,7 +58,7 @@ fn setup(
 
     commands
         .spawn_bundle(PerspectiveCameraBundle {
-            transform: Transform::from_xyz(0.0, 20.0, 30.0)
+            transform: Transform::from_xyz(0.5, 1.0, 2.0)
                 .looking_at(Vec3::new(0.0, 0.0, 0.0), Vec3::Y),
             ..Default::default()
         })

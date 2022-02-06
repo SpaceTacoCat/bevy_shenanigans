@@ -19,12 +19,14 @@ use bevy::render::render_resource::{
     TextureViewDimension,
 };
 use bevy::render::renderer::RenderDevice;
-use bevy::render::view::ExtractedView;
+use bevy::render::view::{ExtractedView, NoFrustumCulling};
 use bevy::render::{RenderApp, RenderStage};
 
-pub struct SkyboxPlugin<const TEXTURE_PATH: &'static str>;
+pub struct SkyboxPlugin;
 
-#[derive(Component, Clone)]
+#[derive(Component, Clone)]        .add_plugin(SkyboxPlugin)
+        .add_plugin(GridPlugin)
+        .add_startup_system(setup)
 pub struct SkyboxMaterial {
     pub texture: Handle<Image>,
 }
@@ -55,11 +57,10 @@ pub struct MaterialBindGroup {
     pub value: BindGroup,
 }
 
-impl<const TEXTURE_PATH: &'static str> Plugin for SkyboxPlugin<TEXTURE_PATH> {
+impl Plugin for SkyboxPlugin {
     fn build(&self, app: &mut App) {
-        app.add_startup_system(setup::<TEXTURE_PATH>)
-            .add_system_to_stage(CoreStage::Update, move_skybox_with_camera)
-            .init_resource::<SkyboxTextureConversionQueue>()
+        app.init_resource::<SkyboxTextureConversionQueue>()
+            .add_startup_system(setup)
             .add_system(process_skybox_texture_conversion_queue);
 
         let render_app = app.sub_app_mut(RenderApp);
@@ -161,17 +162,17 @@ impl<const I: usize> EntityRenderCommand for SetMaterialBindGroup<I> {
     }
 }
 
-fn setup<const TEXTURE_PATH: &'static str>(
+pub fn setup(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut conversion_queue: ResMut<SkyboxTextureConversionQueue>,
     mut meshes: ResMut<Assets<Mesh>>,
 ) {
-    let skybox_texture = asset_server.load(TEXTURE_PATH);
+    let skybox_texture = asset_server.load("textures/sky.png");
     conversion_queue.add(skybox_texture.clone());
 
     commands.spawn().insert_bundle((
-        meshes.add(Mesh::from(shape::Cube { size: 1.0 })),
+        meshes.add(Mesh::from(shape::Cube { size: 2.0 })),
         Transform::from_xyz(0.0, 0.5, 0.0),
         GlobalTransform::default(),
         SkyboxMaterial {
@@ -179,6 +180,7 @@ fn setup<const TEXTURE_PATH: &'static str>(
         },
         Visibility::default(),
         ComputedVisibility::default(),
+        NoFrustumCulling,
     ));
 }
 
@@ -199,17 +201,6 @@ fn process_skybox_texture_conversion_queue(
                     image.reinterpret_stacked_2d_as_array(6);
                 }
             },
-        }
-    }
-}
-
-fn move_skybox_with_camera(
-    mut q_skybox: Query<&mut Transform, With<SkyboxMaterial>>,
-    q_camera: Query<&Transform, (With<MainCamera>, Without<SkyboxMaterial>)>,
-) {
-    if let Ok(camera) = q_camera.get_single() {
-        for mut skybox in q_skybox.iter_mut() {
-            skybox.translation = camera.translation;
         }
     }
 }

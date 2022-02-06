@@ -29,7 +29,7 @@ var g_sampler: sampler;
 fn vertex(vertex: Vertex) -> VertexOutput {
     var out: VertexOutput;
 
-    out.position = view.view_proj * g_mesh.model * vec4<f32>(vertex.position, 1.0);
+    out.position = vec4<f32>(vertex.position, 1.0);
     out.position.z = 0.0;
     out.uv = vertex.position;
 
