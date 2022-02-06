@@ -4,7 +4,10 @@ use bevy::pbr::{MaterialPipeline, SpecializedMaterial};
 use bevy::prelude::*;
 use bevy::reflect::TypeUuid;
 use bevy::render::render_asset::{PrepareAssetError, RenderAsset};
-use bevy::render::render_resource::{BindGroup, BindGroupDescriptor, BindGroupEntry, BindGroupLayout, BindGroupLayoutDescriptor, Buffer, CompareFunction, RenderPipelineDescriptor};
+use bevy::render::render_resource::{
+    BindGroup, BindGroupDescriptor, BindGroupLayout, BindGroupLayoutDescriptor, CompareFunction,
+    RenderPipelineDescriptor,
+};
 use bevy::render::renderer::RenderDevice;
 use bevy::render::view::NoFrustumCulling;
 
@@ -54,7 +57,7 @@ impl SpecializedMaterial for GridMaterial {
         ()
     }
 
-    fn specialize(key: Self::Key, descriptor: &mut RenderPipelineDescriptor) {
+    fn specialize(_: Self::Key, descriptor: &mut RenderPipelineDescriptor) {
         let depth_stencil = descriptor.depth_stencil.as_mut().unwrap();
         depth_stencil.depth_compare = CompareFunction::GreaterEqual;
         depth_stencil.depth_write_enabled = true;
@@ -89,12 +92,14 @@ fn setup(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<GridMaterial>>,
 ) {
-    commands.spawn_bundle(MaterialMeshBundle {
-        mesh: meshes.add(Mesh::from(shape::Quad {
-            size: Vec2::new(2.0, 2.0),
-            flip: false,
-        })),
-        material: materials.add(GridMaterial),
-        ..Default::default()
-    }).insert(NoFrustumCulling);
+    commands
+        .spawn_bundle(MaterialMeshBundle {
+            mesh: meshes.add(Mesh::from(shape::Quad {
+                size: Vec2::new(2.0, 2.0),
+                flip: false,
+            })),
+            material: materials.add(GridMaterial),
+            ..Default::default()
+        })
+        .insert(NoFrustumCulling);
 }

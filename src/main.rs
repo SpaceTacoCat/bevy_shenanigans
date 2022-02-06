@@ -2,7 +2,6 @@
 
 use crate::materials::grid::GridPlugin;
 use crate::materials::skybox::SkyboxPlugin;
-use crate::materials::{grid, skybox};
 use crate::utils::{auto_fly_ship, camera_follow_spaceship};
 use bevy::prelude::*;
 

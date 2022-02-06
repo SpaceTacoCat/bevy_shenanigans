@@ -1,4 +1,3 @@
-use crate::MainCamera;
 use bevy::core_pipeline::Transparent3d;
 use bevy::ecs::system::lifetimeless::{Read, SQuery};
 use bevy::ecs::system::SystemParamItem;
@@ -24,9 +23,7 @@ use bevy::render::{RenderApp, RenderStage};
 
 pub struct SkyboxPlugin;
 
-#[derive(Component, Clone)]        .add_plugin(SkyboxPlugin)
-        .add_plugin(GridPlugin)
-        .add_startup_system(setup)
+#[derive(Component, Clone)]
 pub struct SkyboxMaterial {
     pub texture: Handle<Image>,
 }
