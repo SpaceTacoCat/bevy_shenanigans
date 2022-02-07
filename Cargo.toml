@@ -9,12 +9,21 @@ name = "race-the-moon"
 path = "src/main.rs"
 
 [dependencies]
-bevy = { git = "https://github.com/bevyengine/bevy.git", features = ["dynamic"] }
+bevy = { git = "https://github.com/bevyengine/bevy.git", features = ["dynamic", "serialize"] }
 #bevy = { version = "0.6.0", features = ["dynamic"] }
 #bevy = { path = "../bevy", features = ["dynamic"] }
+bevy_easings = "0.5.1"
+bevy_rapier3d = "0.12.1"
+dirs = "4.0.0"
+serde = { version = "1.0.136", features = ["derive"] }
+serde_json = "1.0.78"
+
 
 [profile.dev]
+opt-level = 1
+
+[profile.dev.package."*"]
 opt-level = 3
 
-#[patch.crates-io]
-#bevy = { git = "https://github.com/bevyengine/bevy.git" }
+[patch.crates-io]
+bevy = { git = "https://github.com/bevyengine/bevy.git" }
