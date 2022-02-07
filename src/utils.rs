@@ -77,6 +77,5 @@ pub fn move_camera_with_wheel(
     let fwd = camera.forward();
     for event in mouse_wheel.iter() {
         camera.translation += fwd * -event.y.signum();
-
     }
 }

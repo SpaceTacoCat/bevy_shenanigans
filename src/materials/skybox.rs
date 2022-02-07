@@ -12,10 +12,9 @@ use bevy::render::render_phase::{
 };
 use bevy::render::render_resource::{
     BindGroup, BindGroupDescriptor, BindGroupEntry, BindGroupLayout, BindGroupLayoutDescriptor,
-    BindGroupLayoutEntry, BindingResource, BindingType, CompareFunction,
-    PrimitiveTopology, RenderPipelineCache, RenderPipelineDescriptor, SamplerBindingType,
-    ShaderStages, SpecializedPipeline, SpecializedPipelines, TextureSampleType,
-    TextureViewDimension,
+    BindGroupLayoutEntry, BindingResource, BindingType, CompareFunction, PrimitiveTopology,
+    RenderPipelineCache, RenderPipelineDescriptor, SamplerBindingType, ShaderStages,
+    SpecializedPipeline, SpecializedPipelines, TextureSampleType, TextureViewDimension,
 };
 use bevy::render::renderer::RenderDevice;
 use bevy::render::view::{ExtractedView, NoFrustumCulling};
