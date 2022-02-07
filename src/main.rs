@@ -1,8 +1,7 @@
 #![feature(let_else)]
 
-use crate::materials::grid::GridPlugin;
 use crate::materials::skybox::SkyboxPlugin;
-use crate::utils::{auto_fly_ship, camera_follow_spaceship, move_camera_with_wheel, rotate_camera_with_mouse};
+use crate::utils::{auto_fly_ship, camera_follow_spaceship};
 use bevy::prelude::*;
 
 mod materials;
@@ -24,8 +23,7 @@ fn main() {
             brightness: 0.5,
         })
         .add_plugins(DefaultPlugins)
-        // .add_plugin(SkyboxPlugin)
-        .add_plugin(GridPlugin)
+        .add_plugin(SkyboxPlugin)
         .add_startup_system(setup)
         // .add_system(rotate_camera_with_mouse)
         // .add_system(move_camera_with_wheel)

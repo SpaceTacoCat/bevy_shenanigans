@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use crate::{MainCamera, PlayerShip};
 use bevy::input::mouse::MouseWheel;
 use bevy::prelude::*;
