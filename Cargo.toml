@@ -12,3 +12,9 @@ path = "src/main.rs"
 bevy = { git = "https://github.com/bevyengine/bevy.git", features = ["dynamic"] }
 #bevy = { version = "0.6.0", features = ["dynamic"] }
 #bevy = { path = "../bevy", features = ["dynamic"] }
+
+[profile.dev]
+opt-level = 3
+
+#[patch.crates-io]
+#bevy = { git = "https://github.com/bevyengine/bevy.git" }

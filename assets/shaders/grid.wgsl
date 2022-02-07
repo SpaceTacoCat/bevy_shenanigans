@@ -7,8 +7,20 @@ struct Vertex {
 
 struct VertexOutput {
     [[builtin(position)]] position: vec4<f32>;
+
+    [[location(0)]] near: vec3<f32>;
+    [[location(1)]] far: vec3<f32>;
+
+    [[location(2)]] clip_space_pos: vec4<f32>;
 };
 
+struct FragmentOutput {
+    [[builtin(frag_depth)]] depth: f32;
+
+    [[location(0)]] color: vec4<f32>;
+};
+
+// TODO: Introduce inverse_view_projection as binding
 fn inverse(in: mat4x4<f32>) -> mat4x4<f32> {
     let Azwzw = in.z.z * in.w.w - in.z.w * in.w.z ;
     let Aywzw = in.z.y * in.w.w - in.z.w * in.w.y ;
@@ -56,13 +68,32 @@ fn inverse(in: mat4x4<f32>) -> mat4x4<f32> {
 fn vertex(in: Vertex) -> VertexOutput {
     var out: VertexOutput;
 
-    out.position = vec4<f32>(in.position.xy, 1.0, 1.0);
+    out.position = vec4<f32>(in.position.xyz, 1.0);
+    let far = inverse(view.view_proj) * vec4<f32>(in.position.xy, 1.0, 1.0);
+    out.far = far.xyz / far.w;
+    let near = inverse(view.view_proj) * vec4<f32>(in.position.xy, -1.0, 1.0);
+    out.near = near.xyz / near.w;
+
+    out.clip_space_pos = view.view_proj * vec4<f32>(in.position, 1.0);
 
     return out;
 }
 
 
 [[stage(fragment)]]
-fn fragment(in: VertexOutput) -> [[location(0)]] vec4<f32> {
-    return vec4<f32>(1.0, 0.0, 0.0, 1.0);
+fn fragment(in: VertexOutput) -> FragmentOutput {
+    var out: FragmentOutput;
+
+    let t = -in.near.y / (in.far.y - in.near.y);
+    let r = in.near + t * (in.far - in.near);
+    let c = ((((round(abs(r.x)) + round(abs(r.z))) * 5.0) % 2.0) / 2.0) + 0.3;
+
+    if (t > 0.0) {
+        out.color = vec4<f32>(c, c, c, 1.0);
+    } else {
+        out.color = vec4<f32>(c, c, c, 0.0);
+    }
+    out.depth = 0.001;
+
+    return out;
 }

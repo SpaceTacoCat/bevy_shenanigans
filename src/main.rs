@@ -2,7 +2,7 @@
 
 use crate::materials::grid::GridPlugin;
 use crate::materials::skybox::SkyboxPlugin;
-use crate::utils::{auto_fly_ship, camera_follow_spaceship};
+use crate::utils::{auto_fly_ship, camera_follow_spaceship, move_camera_with_wheel, rotate_camera_with_mouse};
 use bevy::prelude::*;
 
 mod materials;
@@ -24,9 +24,11 @@ fn main() {
             brightness: 0.5,
         })
         .add_plugins(DefaultPlugins)
-        .add_plugin(SkyboxPlugin)
+        // .add_plugin(SkyboxPlugin)
         .add_plugin(GridPlugin)
         .add_startup_system(setup)
+        // .add_system(rotate_camera_with_mouse)
+        // .add_system(move_camera_with_wheel)
         .add_system_to_stage(CoreStage::Update, auto_fly_ship)
         .add_system_to_stage(CoreStage::Update, camera_follow_spaceship)
         .run();
@@ -57,7 +59,7 @@ fn setup(
 
     commands
         .spawn_bundle(PerspectiveCameraBundle {
-            transform: Transform::from_xyz(0.5, 1.0, 2.0)
+            transform: Transform::from_xyz(0.5, 30.0, -90.0)
                 .looking_at(Vec3::new(0.0, 0.0, 0.0), Vec3::Y),
             ..Default::default()
         })

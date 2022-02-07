@@ -50,19 +50,7 @@ impl RenderAsset for GridMaterial {
     }
 }
 
-impl SpecializedMaterial for GridMaterial {
-    type Key = ();
-
-    fn key(_: &<Self as RenderAsset>::PreparedAsset) -> Self::Key {
-        ()
-    }
-
-    fn specialize(_: Self::Key, descriptor: &mut RenderPipelineDescriptor) {
-        let depth_stencil = descriptor.depth_stencil.as_mut().unwrap();
-        depth_stencil.depth_compare = CompareFunction::GreaterEqual;
-        depth_stencil.depth_write_enabled = true;
-    }
-
+impl Material for GridMaterial {
     fn bind_group(material: &<Self as RenderAsset>::PreparedAsset) -> &BindGroup {
         &material.bind_group
     }
@@ -75,11 +63,15 @@ impl SpecializedMaterial for GridMaterial {
     }
 
     fn vertex_shader(asset_server: &AssetServer) -> Option<Handle<Shader>> {
-        Some(asset_server.load("shaders/grid.wgsl"))
+        let handle = asset_server.load("shaders/grid.wgsl");
+        asset_server.watch_for_changes().unwrap();
+        Some(handle)
     }
 
     fn fragment_shader(asset_server: &AssetServer) -> Option<Handle<Shader>> {
-        Some(asset_server.load("shaders/grid.wgsl"))
+        let handle = asset_server.load("shaders/grid.wgsl");
+        asset_server.watch_for_changes().unwrap();
+        Some(handle)
     }
 
     fn alpha_mode(_: &<Self as RenderAsset>::PreparedAsset) -> AlphaMode {
@@ -92,14 +84,15 @@ fn setup(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<GridMaterial>>,
 ) {
-    commands
-        .spawn_bundle(MaterialMeshBundle {
-            mesh: meshes.add(Mesh::from(shape::Quad {
-                size: Vec2::new(2.0, 2.0),
-                flip: false,
-            })),
-            material: materials.add(GridMaterial),
-            ..Default::default()
-        })
-        .insert(NoFrustumCulling);
+    commands.spawn_bundle((
+        meshes.add(Mesh::from(shape::Quad {
+            size: Vec2::new(2.0, 2.0),
+            flip: false,
+        })),
+        materials.add(GridMaterial),
+        GlobalTransform::default(),
+        Visibility::default(),
+        ComputedVisibility::default(),
+        NoFrustumCulling,
+    ));
 }

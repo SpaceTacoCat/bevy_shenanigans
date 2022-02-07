@@ -132,10 +132,6 @@ impl SpecializedPipeline for SkyboxPipeline {
             self.mesh_pipeline.mesh_layout.clone(),
             self.material_bind_group_layout.clone(),
         ]);
-        descriptor.primitive = PrimitiveState {
-            unclipped_depth: true,
-            ..Default::default()
-        };
         descriptor.depth_stencil = descriptor.depth_stencil.map(|mut depth_stencil| {
             depth_stencil.depth_compare = CompareFunction::GreaterEqual;
             depth_stencil
@@ -170,7 +166,6 @@ pub fn setup(
 
     commands.spawn().insert_bundle((
         meshes.add(Mesh::from(shape::Cube { size: 2.0 })),
-        Transform::from_xyz(0.0, 0.5, 0.0),
         GlobalTransform::default(),
         SkyboxMaterial {
             texture: skybox_texture,
