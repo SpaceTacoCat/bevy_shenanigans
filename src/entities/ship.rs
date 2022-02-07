@@ -5,10 +5,10 @@ use bevy_rapier3d::prelude::*;
 
 pub struct ShipAndControlPlugin;
 
-const TERMINAL_VELOCITY_X: f32 = 12.0;
+const TERMINAL_VELOCITY_X: f32 = 100.0;
 const TERMINAL_VELOCITY_Z: f32 = 12.0;
 
-const FORCE_X: f32 = 1000.0;
+const FORCE_X: f32 = 2000.0;
 
 #[derive(Component)]
 pub struct PlayerShipMarker;
@@ -51,7 +51,7 @@ pub fn spawn_player_ship(
         .insert_bundle(RigidBodyBundle {
             body_type: RigidBodyType::Dynamic.into(),
             damping: RigidBodyDamping {
-                linear_damping: 10.0,
+                linear_damping: 8.0,
                 ..Default::default()
             }.into(),
             ..Default::default()
@@ -72,24 +72,19 @@ pub fn spawn_player_ship(
 
 pub fn camera_follow_spaceship(
     mut q_camera: Query<&mut Transform, With<MainCameraMarker>>,
-    q_spaceship: Query<&Children, With<PlayerShipMarker>>,
-    q_transforms: Query<&Transform, Without<MainCameraMarker>>,
+    q_spaceship: Query<&Transform, (With<PlayerShipMarker>, Without<MainCameraMarker>)>,
 ) {
     let mut camera = if let Ok(camera) = q_camera.get_single_mut() {
         camera
     } else {
         return;
     };
-    let spaceship = if let Ok(children) = q_spaceship.get_single() {
-        children.first().unwrap()
-    } else {
+    let Ok(spaceship) = q_spaceship.get_single() else {
         return;
     };
 
-    let ship_object = q_transforms.get(*spaceship).unwrap();
-
-    camera.translation = ship_object.translation + Vec3::new(0.0, 30.0, -40.0);
-    camera.look_at(ship_object.translation + Vec3::Y * 10.0, Vec3::Y);
+    camera.translation = spaceship.translation + Vec3::new(0.0, 30.0, -40.0);
+    camera.look_at(spaceship.translation + Vec3::Y * 10.0, Vec3::Y);
 }
 
 pub fn fly_ship(
