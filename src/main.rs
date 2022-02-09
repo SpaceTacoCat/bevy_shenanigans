@@ -1,7 +1,7 @@
 #![feature(let_else)]
 #![feature(path_try_exists)]
 
-use crate::entities::environment::spawn_pillar;
+use crate::entities::environment::spawn_sample_scene;
 use crate::entities::ship::ShipAndControlPlugin;
 use crate::materials::skybox::SkyboxPlugin;
 use crate::utils::alter_transform_once::init_translation;
@@ -37,7 +37,7 @@ fn main() {
         .add_plugin(RapierRenderPlugin)
         .add_plugin(EasingsPlugin)
         .add_startup_system(setup)
-        .add_startup_system(spawn_pillar)
+        .add_startup_system(spawn_sample_scene)
         .add_system(init_translation)
         .run();
 }
@@ -63,6 +63,12 @@ fn setup(
     });
 
     commands
-        .spawn_bundle(PerspectiveCameraBundle::default())
+        .spawn_bundle(PerspectiveCameraBundle {
+            perspective_projection: PerspectiveProjection {
+                far: 5000.0,
+                ..Default::default()
+            },
+            ..Default::default()
+        })
         .insert(MainCameraMarker);
 }

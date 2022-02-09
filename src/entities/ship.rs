@@ -1,4 +1,5 @@
 use crate::utils::local_settings::{Action, LocalSettingsLoader};
+use crate::utils::spawn::spawn_model_as_child;
 use crate::MainCameraMarker;
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
@@ -9,6 +10,7 @@ const TERMINAL_VELOCITY_X: f32 = 100.0;
 const TERMINAL_VELOCITY_Z: f32 = 12.0;
 
 const FORCE_X: f32 = 2000.0;
+const FORCE_Z: f32 = 10000.0;
 
 const SHIP_MINIMUM_Y_POS: f32 = 0.0;
 
@@ -49,8 +51,9 @@ pub fn spawn_player_ship(
     mut scene_spawner: ResMut<SceneSpawner>,
     asset_server: Res<AssetServer>,
 ) {
-    let entity = commands
-        .spawn()
+    let mut entity_commands = commands.spawn();
+
+    entity_commands
         .insert_bundle(RigidBodyBundle {
             body_type: RigidBodyType::Dynamic.into(),
             damping: RigidBodyDamping {
@@ -68,10 +71,14 @@ pub fn spawn_player_ship(
         .insert(GlobalTransform::default())
         .insert(ColliderPositionSync::Discrete)
         .insert(ColliderDebugRender::default())
-        .insert(PlayerShipMarker)
-        .id();
+        .insert(PlayerShipMarker);
 
-    scene_spawner.spawn_as_child(asset_server.load("models/spaceship.gltf#Scene0"), entity);
+    spawn_model_as_child(
+        "models/spaceship.gltf",
+        &mut scene_spawner,
+        &asset_server,
+        &mut entity_commands,
+    );
 }
 
 pub fn camera_follow_spaceship(
@@ -114,7 +121,11 @@ pub fn fly_ship(
     forces.force.x = target_x_force;
     vel.linvel.x = vel.linvel.x.abs().min(TERMINAL_VELOCITY_X) * vel.linvel.x.signum();
 
-    forces.force.z = if state.accelerate_manual { 2000.0 } else { 0.0 };
+    forces.force.z = if state.accelerate_manual {
+        FORCE_Z
+    } else {
+        0.0
+    };
 }
 
 pub fn lock_y_position(

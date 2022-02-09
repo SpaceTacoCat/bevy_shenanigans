@@ -7,6 +7,7 @@ use bevy::prelude::*;
 pub mod alter_transform_once;
 pub mod local_settings;
 pub mod macros;
+pub mod spawn;
 
 pub fn rotate_camera_with_mouse(
     mouse_button: Res<Input<MouseButton>>,
