@@ -11,7 +11,7 @@ path = "src/main.rs"
 [dependencies]
 bevy = { git = "https://github.com/bevyengine/bevy.git", features = ["dynamic", "serialize"] }
 #bevy = { version = "0.6.0", features = ["dynamic"] }
-#bevy = { path = "../bevy", features = ["dynamic"] }
+#bevy = { path = "../bevy", features = ["dynamic", "serialize"] }
 bevy_easings = "0.5.1"
 bevy_rapier3d = "0.12.1"
 dirs = "4.0.0"
@@ -27,3 +27,4 @@ opt-level = 3
 
 [patch.crates-io]
 bevy = { git = "https://github.com/bevyengine/bevy.git" }
+#bevy = { path = "../bevy" }

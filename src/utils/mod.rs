@@ -4,6 +4,7 @@ use crate::MainCameraMarker;
 use bevy::input::mouse::MouseWheel;
 use bevy::prelude::*;
 
+pub mod alter_transform_once;
 pub mod local_settings;
 pub mod macros;
 

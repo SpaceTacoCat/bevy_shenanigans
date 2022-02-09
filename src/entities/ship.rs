@@ -10,6 +10,8 @@ const TERMINAL_VELOCITY_Z: f32 = 12.0;
 
 const FORCE_X: f32 = 2000.0;
 
+const SHIP_MINIMUM_Y_POS: f32 = 0.0;
+
 #[derive(Component)]
 pub struct PlayerShipMarker;
 
@@ -22,6 +24,7 @@ pub enum TurnDirection {
 #[derive(Default)]
 pub struct PlayerShipState {
     turning: TurnDirection,
+    accelerate_manual: bool,
 }
 
 impl Plugin for ShipAndControlPlugin {
@@ -53,7 +56,8 @@ pub fn spawn_player_ship(
             damping: RigidBodyDamping {
                 linear_damping: 8.0,
                 ..Default::default()
-            }.into(),
+            }
+            .into(),
             ..Default::default()
         })
         .insert_bundle(ColliderBundle {
@@ -83,7 +87,7 @@ pub fn camera_follow_spaceship(
         return;
     };
 
-    camera.translation = spaceship.translation + Vec3::new(0.0, 30.0, -40.0);
+    camera.translation = spaceship.translation + Vec3::new(0.0, 15.0, -40.0);
     camera.look_at(spaceship.translation + Vec3::Y * 10.0, Vec3::Y);
 }
 
@@ -109,6 +113,8 @@ pub fn fly_ship(
 
     forces.force.x = target_x_force;
     vel.linvel.x = vel.linvel.x.abs().min(TERMINAL_VELOCITY_X) * vel.linvel.x.signum();
+
+    forces.force.z = if state.accelerate_manual { 2000.0 } else { 0.0 };
 }
 
 pub fn lock_y_position(
@@ -118,7 +124,7 @@ pub fn lock_y_position(
         return
     };
 
-    if t.translation.y < 0.0 {
+    if t.translation.y < SHIP_MINIMUM_Y_POS {
         vel.linvel.y = 0.0;
     }
 }
@@ -134,5 +140,11 @@ pub fn control_spaceship(
         ship_state.turning = TurnDirection::Right;
     } else {
         ship_state.turning = TurnDirection::None;
+    }
+
+    if input.pressed(local_settings.key(Action::Special)) {
+        ship_state.accelerate_manual = true;
+    } else {
+        ship_state.accelerate_manual = false;
     }
 }
