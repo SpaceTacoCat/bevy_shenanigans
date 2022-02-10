@@ -4,6 +4,7 @@
 use crate::entities::environment::spawn_sample_scene;
 use crate::entities::ship::ShipAndControlPlugin;
 use crate::materials::skybox::SkyboxPlugin;
+use crate::materials::vignette::VignetteShaderPlugin;
 use crate::utils::alter_transform_once::init_translation;
 use crate::utils::local_settings::LocalSettingsPlugin;
 use bevy::prelude::shape::{Cube, Plane};
@@ -18,28 +19,29 @@ mod utils;
 #[derive(Component)]
 pub struct MainCameraMarker;
 
-#[derive(Debug, Hash, PartialEq, Eq, Clone, StageLabel)]
-struct FixedUpdateStage;
-
 fn main() {
-    App::new()
-        .insert_resource(AmbientLight {
-            color: Color::WHITE,
-            brightness: 0.5,
-        })
-        .add_plugins(DefaultPlugins)
-        .add_plugin(LocalSettingsPlugin {
-            filename: "settings.json".to_string(),
-        })
-        .add_plugin(SkyboxPlugin)
-        .add_plugin(ShipAndControlPlugin)
-        .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
-        .add_plugin(RapierRenderPlugin)
-        .add_plugin(EasingsPlugin)
-        .add_startup_system(setup)
-        .add_startup_system(spawn_sample_scene)
-        .add_system(init_translation)
-        .run();
+    let mut app = App::new();
+
+    app.insert_resource(AmbientLight {
+        color: Color::WHITE,
+        brightness: 0.5,
+    })
+    .add_plugins(DefaultPlugins)
+    .add_plugin(LocalSettingsPlugin {
+        filename: "settings.json".to_string(),
+    })
+    .add_plugin(SkyboxPlugin)
+    .add_plugin(ShipAndControlPlugin)
+    .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
+    .add_plugin(RapierRenderPlugin)
+    .add_plugin(EasingsPlugin)
+    // .add_plugin(VignetteShaderPlugin)
+    .add_startup_system(setup)
+    .add_startup_system(spawn_sample_scene)
+    .add_system(init_translation);
+
+    // bevy_mod_debugdump::print_render_graph(&mut app);
+    app.run();
 }
 
 fn setup(

@@ -26,14 +26,14 @@ pub enum TurnDirection {
 #[derive(Default)]
 pub struct PlayerShipState {
     turning: TurnDirection,
-    accelerate_manual: bool,
+    special: bool,
 }
 
 impl Plugin for ShipAndControlPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<PlayerShipState>()
             .add_startup_system(spawn_player_ship)
-            .add_system(control_spaceship.label("control"))
+            .add_system(handle_user_input.label("control"))
             .add_system(fly_ship.label("fly").after("control"))
             .add_system(lock_y_position.after("fly"))
             .add_system(camera_follow_spaceship.after("fly"));
@@ -121,11 +121,7 @@ pub fn fly_ship(
     forces.force.x = target_x_force;
     vel.linvel.x = vel.linvel.x.abs().min(TERMINAL_VELOCITY_X) * vel.linvel.x.signum();
 
-    forces.force.z = if state.accelerate_manual {
-        FORCE_Z
-    } else {
-        0.0
-    };
+    forces.force.z = if state.special { FORCE_Z } else { 0.0 };
 }
 
 pub fn lock_y_position(
@@ -140,7 +136,7 @@ pub fn lock_y_position(
     }
 }
 
-pub fn control_spaceship(
+pub fn handle_user_input(
     local_settings: Res<LocalSettingsLoader>,
     input: Res<Input<KeyCode>>,
     mut ship_state: ResMut<PlayerShipState>,
@@ -154,8 +150,9 @@ pub fn control_spaceship(
     }
 
     if input.pressed(local_settings.key(Action::Special)) {
-        ship_state.accelerate_manual = true;
+        // TODO: In normal game make this `just_pressed`
+        ship_state.special = true;
     } else {
-        ship_state.accelerate_manual = false;
+        ship_state.special = false;
     }
 }
