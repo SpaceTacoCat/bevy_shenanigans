@@ -2,7 +2,10 @@
 
 use crate::MainCameraMarker;
 use bevy::input::mouse::MouseWheel;
-use bevy::prelude::*;
+use bevy::prelude::{
+    EulerRot, EventReader, Input, Local, MouseButton, Quat, Query, Res, Transform, Vec2, Windows,
+    With,
+};
 
 pub mod alter_transform_once;
 pub mod local_settings;

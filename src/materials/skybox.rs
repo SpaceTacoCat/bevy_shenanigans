@@ -4,7 +4,12 @@ use bevy::ecs::system::SystemParamItem;
 use bevy::pbr::{
     DrawMesh, MeshPipeline, MeshPipelineKey, MeshUniform, SetMeshBindGroup, SetMeshViewBindGroup,
 };
-use bevy::prelude::*;
+use bevy::prelude::{
+    shape, App, AssetServer, Assets, Commands, Component, ComputedVisibility, Entity, FromWorld,
+    GlobalTransform, Handle, Image, Mesh, Msaa, Plugin, Query, Res, ResMut, Shader, Visibility,
+    With, World,
+};
+
 use bevy::render::render_asset::RenderAssets;
 use bevy::render::render_phase::{
     AddRenderCommand, DrawFunctions, EntityRenderCommand, RenderCommandResult, RenderPhase,

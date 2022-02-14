@@ -1,10 +1,10 @@
 use crate::utils::local_settings::{Action, LocalSettingsLoader};
 use crate::utils::spawn::spawn_model_as_child;
-use crate::MainCameraMarker;
 use bevy::prelude::*;
+
 use bevy_rapier3d::prelude::*;
 
-pub struct ShipAndControlPlugin;
+pub struct ShipControlPlugin;
 
 const TERMINAL_VELOCITY_X: f32 = 100.0;
 const TERMINAL_VELOCITY_Z: f32 = 12.0;
@@ -29,14 +29,20 @@ pub struct PlayerShipState {
     special: bool,
 }
 
-impl Plugin for ShipAndControlPlugin {
+const LABEL_HANDLE_USER_INPUT: &str = "control";
+pub const LABEL_FLY_SHIP: &str = "fly";
+
+impl Plugin for ShipControlPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<PlayerShipState>()
             .add_startup_system(spawn_player_ship)
-            .add_system(handle_user_input.label("control"))
-            .add_system(fly_ship.label("fly").after("control"))
-            .add_system(lock_y_position.after("fly"))
-            .add_system(camera_follow_spaceship.after("fly"));
+            .add_system(handle_user_input.label(LABEL_HANDLE_USER_INPUT))
+            .add_system(
+                fly_ship
+                    .label(LABEL_FLY_SHIP)
+                    .after(LABEL_HANDLE_USER_INPUT),
+            )
+            .add_system(lock_y_position.after(LABEL_FLY_SHIP));
     }
 }
 
@@ -81,23 +87,6 @@ pub fn spawn_player_ship(
     );
 }
 
-pub fn camera_follow_spaceship(
-    mut q_camera: Query<&mut Transform, With<MainCameraMarker>>,
-    q_spaceship: Query<&Transform, (With<PlayerShipMarker>, Without<MainCameraMarker>)>,
-) {
-    let mut camera = if let Ok(camera) = q_camera.get_single_mut() {
-        camera
-    } else {
-        return;
-    };
-    let Ok(spaceship) = q_spaceship.get_single() else {
-        return;
-    };
-
-    camera.translation = spaceship.translation + Vec3::new(0.0, 15.0, -40.0);
-    camera.look_at(spaceship.translation + Vec3::Y * 10.0, Vec3::Y);
-}
-
 pub fn fly_ship(
     mut q_spaceship: Query<
         (
@@ -124,6 +113,7 @@ pub fn fly_ship(
     forces.force.z = if state.special { FORCE_Z } else { 0.0 };
 }
 
+/// TODO: This probably needs updating
 pub fn lock_y_position(
     mut q_spaceship: Query<(&Transform, &mut RigidBodyVelocityComponent), With<PlayerShipMarker>>,
 ) {

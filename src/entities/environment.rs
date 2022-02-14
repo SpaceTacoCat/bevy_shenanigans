@@ -1,6 +1,8 @@
 use crate::utils::alter_transform_once::AlterTransformOnce;
 use crate::utils::spawn;
-use bevy::prelude::*;
+use bevy::prelude::{
+    AssetServer, Commands, GlobalTransform, Res, ResMut, SceneSpawner, Transform, Vec3,
+};
 
 pub fn spawn_sample_scene(
     mut commands: Commands,

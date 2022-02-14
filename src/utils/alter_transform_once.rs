@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::prelude::{Commands, Component, Entity, Query, Transform};
 
 #[derive(Component)]
 pub struct AlterTransformOnce {
