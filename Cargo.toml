@@ -12,8 +12,9 @@ path = "src/main.rs"
 bevy = { git = "https://github.com/bevyengine/bevy.git", features = ["dynamic", "serialize"] }
 #bevy = { version = "0.6.0", features = ["dynamic"] }
 #bevy = { path = "../bevy", features = ["dynamic", "serialize"] }
-bevy_easings = "0.5.1"
-bevy_rapier3d = "0.12.1"
+bevy_easings = "0.6.0"
+#bevy_rapier3d = { path = "../bevy_rapier/bevy_rapier3d" }
+bevy_rapier3d = { git = "https://github.com/SpaceTacoCat/bevy_rapier" }
 #bevy_mod_debugdump = "0.3.0"
 dirs = "4.0.0"
 serde = { version = "1.0.136", features = ["derive"] }

@@ -9,7 +9,11 @@ use bevy::prelude::{
     GlobalTransform, Handle, Image, Mesh, Msaa, Plugin, Query, Res, ResMut, Shader, Visibility,
     With, World,
 };
+use bevy::render::render_resource::{
+    SpecializedMeshPipeline, SpecializedMeshPipelineError, SpecializedMeshPipelines,
+};
 
+use bevy::render::mesh::MeshVertexBufferLayout;
 use bevy::render::render_asset::RenderAssets;
 use bevy::render::render_phase::{
     AddRenderCommand, DrawFunctions, EntityRenderCommand, RenderCommandResult, RenderPhase,
@@ -19,7 +23,7 @@ use bevy::render::render_resource::{
     BindGroup, BindGroupDescriptor, BindGroupEntry, BindGroupLayout, BindGroupLayoutDescriptor,
     BindGroupLayoutEntry, BindingResource, BindingType, CompareFunction, PrimitiveTopology,
     RenderPipelineCache, RenderPipelineDescriptor, SamplerBindingType, ShaderStages,
-    SpecializedPipeline, SpecializedPipelines, TextureSampleType, TextureViewDimension,
+    TextureSampleType, TextureViewDimension,
 };
 use bevy::render::renderer::RenderDevice;
 use bevy::render::view::{ExtractedView, NoFrustumCulling};
@@ -68,7 +72,7 @@ impl Plugin for SkyboxPlugin {
         render_app
             .add_render_command::<Transparent3d, SkyboxDrawCustom>()
             .init_resource::<SkyboxPipeline>()
-            .init_resource::<SpecializedPipelines<SkyboxPipeline>>()
+            .init_resource::<SpecializedMeshPipelines<SkyboxPipeline>>()
             .add_system_to_stage(RenderStage::Extract, extract_skybox_material)
             .add_system_to_stage(RenderStage::Queue, queue_skybox_pipeline)
             .add_system_to_stage(RenderStage::Queue, queue_view_extra_bind_group);
@@ -121,11 +125,15 @@ impl FromWorld for SkyboxPipeline {
     }
 }
 
-impl SpecializedPipeline for SkyboxPipeline {
+impl SpecializedMeshPipeline for SkyboxPipeline {
     type Key = MeshPipelineKey;
 
-    fn specialize(&self, key: Self::Key) -> RenderPipelineDescriptor {
-        let mut descriptor = self.mesh_pipeline.specialize(key);
+    fn specialize(
+        &self,
+        key: Self::Key,
+        layout: &MeshVertexBufferLayout,
+    ) -> Result<RenderPipelineDescriptor, SpecializedMeshPipelineError> {
+        let mut descriptor = self.mesh_pipeline.specialize(key, layout)?;
         descriptor.vertex.shader = self.shader.clone();
         descriptor.fragment = descriptor.fragment.map(|mut fragment| {
             fragment.shader = self.shader.clone();
@@ -140,7 +148,7 @@ impl SpecializedPipeline for SkyboxPipeline {
             depth_stencil.depth_compare = CompareFunction::GreaterEqual;
             depth_stencil
         });
-        descriptor
+        Ok(descriptor)
     }
 }
 
@@ -245,13 +253,18 @@ fn extract_skybox_material(mut commands: Commands, query: Query<(Entity, &Skybox
 }
 
 #[allow(clippy::type_complexity)]
+#[allow(clippy::too_many_arguments)]
 fn queue_skybox_pipeline(
     transparent_3d_draw_functions: Res<DrawFunctions<Transparent3d>>,
     custom_pipeline: Res<SkyboxPipeline>,
     msaa: Res<Msaa>,
-    mut pipelines: ResMut<SpecializedPipelines<SkyboxPipeline>>,
+    render_meshes: Res<RenderAssets<Mesh>>,
+    mut pipelines: ResMut<SpecializedMeshPipelines<SkyboxPipeline>>,
     mut pipeline_cache: ResMut<RenderPipelineCache>,
-    material_meshes: Query<(Entity, &MeshUniform), (With<Handle<Mesh>>, With<SkyboxMaterial>)>,
+    material_meshes: Query<
+        (Entity, &Handle<Mesh>, &MeshUniform),
+        (With<Handle<Mesh>>, With<SkyboxMaterial>),
+    >,
     mut views: Query<(&ExtractedView, &mut RenderPhase<Transparent3d>)>,
 ) {
     let draw_function = transparent_3d_draw_functions
@@ -260,12 +273,21 @@ fn queue_skybox_pipeline(
         .unwrap();
     let key = MeshPipelineKey::from_msaa_samples(msaa.samples)
         | MeshPipelineKey::from_primitive_topology(PrimitiveTopology::TriangleList);
-    let pipeline = pipelines.specialize(&mut pipeline_cache, &custom_pipeline, key);
 
     for (view, mut transparent_phase) in views.iter_mut() {
         let view_matrix = view.transform.compute_matrix();
         let view_row_2 = view_matrix.row(2);
-        for (entity, mesh) in material_meshes.iter() {
+        for (entity, mesh_handle, mesh) in material_meshes.iter() {
+            let render_mesh = render_meshes.get(mesh_handle).unwrap();
+            let pipeline = pipelines
+                .specialize(
+                    &mut pipeline_cache,
+                    &custom_pipeline,
+                    key,
+                    &render_mesh.layout,
+                )
+                .unwrap();
+
             transparent_phase.add(Transparent3d {
                 entity,
                 pipeline,
