@@ -2514,6 +2514,7 @@ dependencies = [
  "bevy_easings",
  "bevy_rapier3d",
  "dirs",
+ "num-traits",
  "serde",
  "serde_json",
 ]

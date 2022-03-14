@@ -3,52 +3,42 @@ use crate::utils::spawn::spawn_model_as_child;
 use bevy::prelude::*;
 
 use bevy_rapier3d::prelude::*;
+use input_state::{PlayerShipInputState, TurnDirection};
 
-pub struct ShipControlPlugin;
+mod input_state;
 
 const TERMINAL_VELOCITY_X: f32 = 100.0;
-const TERMINAL_VELOCITY_Z: f32 = 12.0;
+const TERMINAL_VELOCITY_Z: &[f32] = &[120.0, 240.0, 350.0, 420.0, 500.0, 560.0, 600.0];
+
+const DAMPING_X: f32 = 150.0;
 
 const FORCE_X: f32 = 2000.0;
 const FORCE_Z: f32 = 10000.0;
 
-const SHIP_MINIMUM_Y_POS: f32 = 0.0;
+const LABEL_HANDLE_USER_INPUT: &str = "a3abb244-887a-469d-8a34-f6c154b0d310";
+pub const LABEL_FLY_SHIP: &str = "af0a465f-99e8-4023-bcc1-921ff9a1e00a";
+
+pub struct ShipControlPlugin;
 
 #[derive(Component)]
 pub struct PlayerShipMarker;
 
-pub enum TurnDirection {
-    Left = -1,
-    Right = 1,
-    None = 0,
-}
-
 #[derive(Default)]
-pub struct PlayerShipState {
-    turning: TurnDirection,
-    special: bool,
+pub struct PlayerShipDescriptor {
+    pub speed_level: usize,
 }
-
-const LABEL_HANDLE_USER_INPUT: &str = "control";
-pub const LABEL_FLY_SHIP: &str = "fly";
 
 impl Plugin for ShipControlPlugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<PlayerShipState>()
+        app.init_resource::<PlayerShipInputState>()
+            .init_resource::<PlayerShipDescriptor>()
             .add_startup_system(spawn_player_ship)
             .add_system(handle_user_input.label(LABEL_HANDLE_USER_INPUT))
             .add_system(
                 fly_ship
                     .label(LABEL_FLY_SHIP)
                     .after(LABEL_HANDLE_USER_INPUT),
-            )
-            .add_system(lock_y_position.after(LABEL_FLY_SHIP));
-    }
-}
-
-impl Default for TurnDirection {
-    fn default() -> Self {
-        TurnDirection::None
+            );
     }
 }
 
@@ -63,7 +53,12 @@ pub fn spawn_player_ship(
         .insert_bundle(RigidBodyBundle {
             body_type: RigidBodyType::Dynamic.into(),
             damping: RigidBodyDamping {
-                linear_damping: 8.0,
+                linear_damping: 20.0,
+                ..Default::default()
+            }
+            .into(),
+            mass_properties: RigidBodyMassProps {
+                flags: RigidBodyMassPropsFlags::ROTATION_LOCKED,
                 ..Default::default()
             }
             .into(),
@@ -88,18 +83,22 @@ pub fn spawn_player_ship(
 }
 
 pub fn fly_ship(
-    mut q_spaceship: Query<
-        (
-            &mut RigidBodyVelocityComponent,
-            &mut RigidBodyForcesComponent,
-        ),
-        With<PlayerShipMarker>,
-    >,
-    state: Res<PlayerShipState>,
+    time: Res<Time>,
+    mut q_spaceship: Query<(&mut RigidBodyVelocityComponent,), With<PlayerShipMarker>>,
+    mut descriptor: ResMut<PlayerShipDescriptor>,
+    state: Res<PlayerShipInputState>,
 ) {
-    let Ok((mut vel, mut forces)) = q_spaceship.get_single_mut() else {
+    let Ok((mut vel, )) = q_spaceship.get_single_mut() else {
         return
     };
+
+    if state.special {
+        descriptor.speed_level += 1;
+    }
+
+    let dt = time.delta().as_secs_f32();
+
+    vel.linvel.x = vel.linvel.x - vel.linvel.x.signum() * DAMPING_X * dt;
 
     let target_x_force = match state.turning {
         TurnDirection::Left => -FORCE_X,
@@ -107,29 +106,24 @@ pub fn fly_ship(
         TurnDirection::None => 0.0,
     };
 
-    forces.force.x = target_x_force;
-    vel.linvel.x = vel.linvel.x.abs().min(TERMINAL_VELOCITY_X) * vel.linvel.x.signum();
-
-    forces.force.z = if state.special { FORCE_Z } else { 0.0 };
-}
-
-/// TODO: This probably needs updating
-pub fn lock_y_position(
-    mut q_spaceship: Query<(&Transform, &mut RigidBodyVelocityComponent), With<PlayerShipMarker>>,
-) {
-    let Ok((t, mut vel)) = q_spaceship.get_single_mut() else {
-        return
-    };
-
-    if t.translation.y < SHIP_MINIMUM_Y_POS {
-        vel.linvel.y = 0.0;
+    vel.linvel.x =
+        (vel.linvel.x + target_x_force * dt).clamp(-TERMINAL_VELOCITY_X, TERMINAL_VELOCITY_X);
+    if vel.linvel.x.abs() < 5.0 {
+        vel.linvel.x = 0.0;
     }
+    vel.linvel.z += FORCE_Z * dt;
+    let terminal_velocity_z =
+        TERMINAL_VELOCITY_Z[descriptor.speed_level.min(TERMINAL_VELOCITY_Z.len() - 1)];
+    vel.linvel.z = vel
+        .linvel
+        .z
+        .clamp(-terminal_velocity_z, terminal_velocity_z);
 }
 
 pub fn handle_user_input(
     local_settings: Res<LocalSettingsLoader>,
     input: Res<Input<KeyCode>>,
-    mut ship_state: ResMut<PlayerShipState>,
+    mut ship_state: ResMut<PlayerShipInputState>,
 ) {
     if input.pressed(local_settings.key(Action::Left)) {
         ship_state.turning = TurnDirection::Left;
@@ -139,10 +133,8 @@ pub fn handle_user_input(
         ship_state.turning = TurnDirection::None;
     }
 
-    if input.pressed(local_settings.key(Action::Special)) {
-        // TODO: In normal game make this `just_pressed`
+    ship_state.special = false;
+    if input.just_pressed(local_settings.key(Action::Special)) {
         ship_state.special = true;
-    } else {
-        ship_state.special = false;
     }
 }

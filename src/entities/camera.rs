@@ -15,7 +15,6 @@ fn setup_main_camera(mut commands: Commands) {
     commands
         .spawn_bundle(PerspectiveCameraBundle {
             perspective_projection: PerspectiveProjection {
-                far: 5000.0,
                 ..Default::default()
             },
             ..Default::default()
@@ -27,9 +26,7 @@ pub fn camera_follow_spaceship(
     mut q_camera: Query<&mut Transform, With<MainCameraMarker>>,
     q_spaceship: Query<&Transform, (With<PlayerShipMarker>, Without<MainCameraMarker>)>,
 ) {
-    let mut camera = if let Ok(camera) = q_camera.get_single_mut() {
-        camera
-    } else {
+    let Ok(mut camera) = q_camera.get_single_mut() else {
         return;
     };
     let Ok(spaceship) = q_spaceship.get_single() else {

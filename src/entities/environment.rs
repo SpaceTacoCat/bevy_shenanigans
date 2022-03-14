@@ -3,6 +3,8 @@ use crate::utils::spawn;
 use bevy::prelude::{
     AssetServer, Commands, GlobalTransform, Res, ResMut, SceneSpawner, Transform, Vec3,
 };
+use bevy_rapier3d::na::{DMatrix, Vector3};
+use bevy_rapier3d::prelude::{ColliderBundle, ColliderShape, RigidBodyBundle, RigidBodyType};
 
 pub fn spawn_sample_scene(
     mut commands: Commands,
@@ -17,16 +19,36 @@ pub fn spawn_sample_scene(
         |manifest| manifest.transform.translation.z += 2500.0,
     );
 
-    let ent = commands
+    // Spawn ground plane
+    commands
         .spawn()
-        .insert_bundle((
-            Transform::default(),
-            GlobalTransform::default(),
-            AlterTransformOnce {
-                target: Transform::from_translation(Vec3::new(10.0, 2.0, 10.0)),
-            },
-        ))
-        .id();
+        .insert(Transform {
+            translation: Vec3::new(0.0, 1.0, 0.0),
+            ..Default::default()
+        })
+        .insert(GlobalTransform::default())
+        .insert_bundle(RigidBodyBundle {
+            body_type: RigidBodyType::Static.into(),
+            ..Default::default()
+        })
+        .insert_bundle(ColliderBundle {
+            shape: ColliderShape::heightfield(DMatrix::zeros(2, 2), Vector3::new(1e9, 1.0, 1e9))
+                .into(),
+            ..Default::default()
+        });
 
-    scene_spawner.spawn_as_child(asset_server.load("models/pillar.gltf#Scene0"), ent);
+    for i in 1..10000 {
+        let ent = commands
+            .spawn()
+            .insert_bundle((
+                Transform::default(),
+                GlobalTransform::default(),
+                AlterTransformOnce {
+                    target: Transform::from_translation(Vec3::new(10.0, 2.0, 10.0 * (i as f32))),
+                },
+            ))
+            .id();
+
+        scene_spawner.spawn_as_child(asset_server.load("models/pillar.gltf#Scene0"), ent);
+    }
 }
