@@ -1,10 +1,11 @@
 #![feature(let_else)]
 #![feature(path_try_exists)]
+#![feature(generic_const_exprs)]
 
 use crate::entities::environment::spawn_sample_scene;
 use crate::entities::ship::ShipControlPlugin;
 use crate::materials::skybox::SkyboxPlugin;
-use crate::utils::alter_transform_once::init_translation;
+use crate::utils::alter_transform_once::AlterTransformOncePlugin;
 use crate::utils::local_settings::LocalSettingsPlugin;
 use bevy::prelude::*;
 use bevy::DefaultPlugins;
@@ -37,9 +38,9 @@ fn main() {
     .add_plugin(SkyboxPlugin)
     .add_plugin(ShipControlPlugin)
     .add_plugin(CameraPlugin)
+    .add_plugin(AlterTransformOncePlugin)
     // .add_plugin(VignetteShaderPlugin)
-    .add_startup_system(spawn_sample_scene)
-    .add_system(init_translation);
+    .add_startup_system(spawn_sample_scene);
 
     // bevy_mod_debugdump::print_render_graph(&mut app);
     app.run();

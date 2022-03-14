@@ -1,8 +1,16 @@
-use bevy::prelude::{Commands, Component, Entity, Query, Transform};
+use bevy::prelude::*;
+
+pub struct AlterTransformOncePlugin;
 
 #[derive(Component)]
 pub struct AlterTransformOnce {
     pub target: Transform,
+}
+
+impl Plugin for AlterTransformOncePlugin {
+    fn build(&self, app: &mut App) {
+        app.add_system(init_translation);
+    }
 }
 
 pub fn init_translation(
