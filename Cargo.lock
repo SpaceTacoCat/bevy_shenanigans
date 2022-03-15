@@ -688,7 +688,7 @@ dependencies = [
  "ahash",
  "bevy_derive",
  "getrandom",
- "hashbrown",
+ "hashbrown 0.11.2",
  "instant",
  "tracing",
  "uuid",
@@ -954,6 +954,12 @@ dependencies = [
  "cfg-if 1.0.0",
  "wasm-bindgen",
 ]
+
+[[package]]
+name = "coord_2d"
+version = "0.3.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2f5d80027c28c83cf5631e8a9c42f2d8b8fcbda6cb8eb420c89a7bf812ec3ad2"
 
 [[package]]
 name = "copyless"
@@ -1241,6 +1247,15 @@ checksum = "73770f8e1fe7d64df17ca66ad28994a0a623ea497fa69486e14984e715c5d174"
 dependencies = [
  "adler32",
  "byteorder",
+]
+
+[[package]]
+name = "direction"
+version = "0.18.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3c56672976b806b6fe8e41998c6d0503cd02479c6059c47451ce8addc7871271"
+dependencies = [
+ "coord_2d",
 ]
 
 [[package]]
@@ -1563,7 +1578,7 @@ checksum = "a538f217be4d405ff4719a283ca68323cc2384003eca5baaa87501e821c81dda"
 dependencies = [
  "bitflags",
  "gpu-descriptor-types",
- "hashbrown",
+ "hashbrown 0.11.2",
 ]
 
 [[package]]
@@ -1573,6 +1588,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "363e3677e55ad168fef68cf9de3a4a310b53124c5e784c53a1d70e92d23f2126"
 dependencies = [
  "bitflags",
+]
+
+[[package]]
+name = "grid_2d"
+version = "0.15.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "10ea69b4e8dfc8ae7b0f0d1fa510109113f3ae3fc265ba05c49e14cb3f249db4"
+dependencies = [
+ "coord_2d",
 ]
 
 [[package]]
@@ -1593,6 +1617,15 @@ checksum = "ab5ef0d4909ef3724cc8cce6ccc8572c5c817592e9285f5464f8e86f8bd3726e"
 dependencies = [
  "ahash",
  "serde",
+]
+
+[[package]]
+name = "hashbrown"
+version = "0.12.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8c21d40587b92fa6a6c6e3c1bdbf87d75511db5672f9c93175574b3a00df1758"
+dependencies = [
+ "ahash",
 ]
 
 [[package]]
@@ -1655,7 +1688,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "282a6247722caba404c065016bbfa522806e51714c34f5dfc3e4a3a46fcb4223"
 dependencies = [
  "autocfg",
- "hashbrown",
+ "hashbrown 0.11.2",
 ]
 
 [[package]]
@@ -2516,6 +2549,7 @@ dependencies = [
  "dirs",
  "serde",
  "serde_json",
+ "wfc",
 ]
 
 [[package]]
@@ -3234,6 +3268,20 @@ checksum = "c060b319f29dd25724f09a2ba1418f142f539b2be99fbf4d2d5a8f7330afb8eb"
 dependencies = [
  "js-sys",
  "wasm-bindgen",
+]
+
+[[package]]
+name = "wfc"
+version = "0.10.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a67419ef3dfc5eda49df159b78cacd6acaa84e7c5293d68eb6e3427fb1c68034"
+dependencies = [
+ "coord_2d",
+ "direction",
+ "getrandom",
+ "grid_2d",
+ "hashbrown 0.12.0",
+ "rand",
 ]
 
 [[package]]
